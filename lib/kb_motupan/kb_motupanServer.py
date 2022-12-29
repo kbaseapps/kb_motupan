@@ -338,10 +338,10 @@ class Application(object):
         self.serverlog.set_log_level(6)
         self.rpc_service = JSONRPCServiceCustom()
         self.method_authentication = dict()
-        self.rpc_service.add(impl_kb_motupan.run_kb_motupan,
-                             name='kb_motupan.run_kb_motupan',
+        self.rpc_service.add(impl_kb_motupan.run_mmseqs2_and_mOTUpan_files,
+                             name='kb_motupan.run_mmseqs2_and_mOTUpan_files',
                              types=[dict])
-        self.method_authentication['kb_motupan.run_kb_motupan'] = 'required'  # noqa
+        self.method_authentication['kb_motupan.run_mmseqs2_and_mOTUpan_files'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_motupan.status,
                              name='kb_motupan.status',
                              types=[dict])
