@@ -26,7 +26,7 @@ RUN make all
 
 
 # MMseqs2
-RUN curl --insecure -o mmseqs-linux-avx2.tar.gz https://mmseqs.com/latest/mmseqs-linux-avx2.tar.gz && \
+RUN curl -o mmseqs-linux-avx2.tar.gz https://mmseqs.com/latest/mmseqs-linux-avx2.tar.gz && \
     tar xvzf mmseqs-linux-avx2.tar.gz
 ENV PATH="${PATH}:/kb/module/mmseqs/bin"
 
