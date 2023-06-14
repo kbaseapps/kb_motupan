@@ -342,6 +342,10 @@ class Application(object):
                              name='kb_motupan.run_mmseqs2_and_mOTUpan_files',
                              types=[dict])
         self.method_authentication['kb_motupan.run_mmseqs2_and_mOTUpan_files'] = 'required'  # noqa
+        self.rpc_service.add(impl_kb_motupan.run_kb_motupan,
+                             name='kb_motupan.run_kb_motupan',
+                             types=[dict])
+        self.method_authentication['kb_motupan.run_kb_motupan'] = 'required'  # noqa
         self.rpc_service.add(impl_kb_motupan.status,
                              name='kb_motupan.status',
                              types=[dict])

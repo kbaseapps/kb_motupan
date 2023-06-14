@@ -1,6 +1,10 @@
 # kb_motupan release notes
 =========================================
 
+0.0.2
+-----
+* Added run_kb_motupan() method for App
+
 0.0.1
 -----
 * Added mmseqs2 and mOTUlizer installs to Dockerfile

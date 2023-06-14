@@ -1,0 +1,165 @@
+{
+    "ver": "0.0.2",
+    "authors": [
+        "dylan"
+    ],
+    "contact": "http://www.kbase.us/support/",
+    "categories": ["active", "communities", "comparative_genomics"],
+    "widgets": {
+        "input": null,
+        "output": "no-display"
+    },
+    "parameters": [
+        {
+            "id": "input_ref",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "" ],
+            "field_type": "text",
+            "text_options": {
+		"is_output_name": false,
+                "valid_ws_types": ["KBaseSets.GenomeSet",
+                                   "KBaseTrees.Tree"]
+            }
+        },
+        {
+            "id": "output_pangenome_name",
+            "optional": false,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "mOTUpan.Pangenome" ],
+            "field_type": "text",
+            "text_options": {
+		"is_output_name": true,
+                "valid_ws_types": ["KBaseGenomes.Pangenome"]
+            }
+        },
+        {
+            "id": "checkm_version",
+            "optional": false,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ "CheckM-1" ],
+            "field_type": "dropdown",
+            "dropdown_options": {
+                "options": [
+                    {
+                        "value": "ChecmM-1",
+                        "display": "CheckM (ver 1)",
+                        "id": "checkm_version-CheckM-1",
+                        "ui-name": "checkm_version-CheckM-1"
+                    }
+                ]
+            }
+        },	
+        {
+            "id": "mmseqs_cluster_mode",
+            "optional": false,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ "easy-cluster" ],
+            "field_type": "dropdown",
+            "dropdown_options": {
+                "options": [
+                    {
+                        "value": "easy-cluster",
+                        "display": "easy-cluster",
+                        "id": "mmseqs_cluster_mode-easy_cluster",
+                        "ui-name": "mmseqs_cluster_mode-easy_cluster"
+                    },
+                    {
+                        "value": "easy-linclust",
+                        "display": "easy-linclust",
+                        "id": "mmseqs_cluster_mode-easy_linclust",
+                        "ui-name": "mmseqs_cluster_mode-easy_linclust"
+                    }
+                ]
+            }
+        },	
+        {
+            "id": "mmseqs_min_seq_id",
+            "optional": true,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": ["0.0"],
+            "field_type": "text",
+            "text_options": {
+                "validate_as": "float",
+                "min_int": 0.0,
+                "max_int": 100.0
+            }
+        },
+        {
+            "id": "mmseqs_min_coverage",
+            "optional": true,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": ["0.8"],
+            "field_type": "text",
+            "text_options": {
+                "validate_as": "float",
+                "min_int": 0.0,
+                "max_int": 1.0
+            }
+        },
+        {
+            "id": "motupan_max_iter",
+            "optional": true,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": ["1"],
+            "field_type": "text",
+            "text_options": {
+                "validate_as": "int",
+                "min_int": 1,
+                "max_int": 20
+            }
+        }
+    ],
+    "behavior": {
+        "service-mapping": {
+            "url": "",
+            "name": "kb_motupan",
+            "method": "run_kb_motupan",
+            "input_mapping": [
+                {
+                    "narrative_system_variable": "workspace",
+                    "target_property": "workspace_name"
+                },{
+                    "input_parameter": "input_ref",
+                    "target_property": "input_ref",
+                    "target_type_transform":"ref"
+                },{
+                    "input_parameter": "output_pangenome_name",
+                    "target_property": "output_pangenome_name"
+                },{
+                    "input_parameter": "checkm_version",
+                    "target_property": "checkm_version"
+                },{
+                    "input_parameter": "mmseqs_cluster_mode",
+                    "target_property": "mmseqs_cluster_mode"
+                },{
+                    "input_parameter": "mmseqs_min_seq_id",
+                    "target_property": "mmseqs_min_seq_id"
+                },{
+                    "input_parameter": "mmseqs_min_coverage",
+                    "target_property": "mmseqs_min_coverage"
+                },{
+                    "input_parameter": "motupan_max_iter",
+                    "target_property": "motupan_max_iter"
+                }
+            ],
+            "output_mapping": [
+                {
+                    "service_method_output_path": [0,"report_name"],
+                    "target_property": "report_name"
+                },{
+                    "service_method_output_path": [0,"report_ref"],
+                    "target_property": "report_ref"
+                }
+            ]
+        }
+    },
+    "job_id_output_field": "docker"
+}

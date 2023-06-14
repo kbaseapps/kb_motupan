@@ -19,6 +19,10 @@ module kb_motupan {
     typedef string data_obj_ref;
     typedef int    bool;
 
+    /* Report results
+    **    report_name: The name of the report object in the workspace.
+    **    report_ref: The UPA of the report object, e.g. wsid/objid/ver.
+    */
     typedef structure {
         data_obj_name report_name;
         data_obj_ref  report_ref;
@@ -47,6 +51,25 @@ module kb_motupan {
 	file_path pangenome_json;
     } run_mmseqs2_and_mOTUpan_files_Output;
 
-    funcdef run_mmseqs2_and_mOTUpan_files (run_mmseqs2_and_mOTUpan_files_Params params)  returns (run_mmseqs2_and_mOTUpan_files_Output) authentication required;
+    funcdef run_mmseqs2_and_mOTUpan_files (run_mmseqs2_and_mOTUpan_files_Params params)  returns (run_mmseqs2_and_mOTUpan_files_Output output) authentication required;
 
+    
+    /* run_kb_motupan()
+    **
+    **  Method for running mOTUpan from kbase widget
+    */
+    typedef structure {
+	int           workspace_name;
+	data_obj_ref  input_ref;
+	data_obj_name output_pangenome_name;
+
+	string checkm_version;
+	string mmseqs_cluster_mode;
+	float  mmseqs_min_seq_id;
+	/*int    mmseqs_cov_mode;*/
+	float  mmseqs_min_coverage;
+	int    motupan_max_iter;
+    } run_kb_motupan_Params;
+    
+    funcdef run_kb_motupan (run_kb_motupan_Params params)  returns (ReportResults output) authentication required;
 };

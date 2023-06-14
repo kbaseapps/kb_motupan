@@ -3,12 +3,15 @@ import os
 import time
 import unittest
 import shutil
+from shutil import copyfile
+from pathlib import Path
 from pprint import pprint
 from configparser import ConfigParser
 
 from kb_motupan.kb_motupanImpl import kb_motupan
 from kb_motupan.kb_motupanServer import MethodContext
 from installed_clients.authclient import KBaseAuth as _KBaseAuth
+from installed_clients.GenomeFileUtilClient import GenomeFileUtil
 
 from installed_clients.WorkspaceClient import Workspace
 
@@ -17,7 +20,7 @@ class kb_motupanTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        token = os.environ.get('KB_AUTH_TOKEN', None)
+        cls.token = os.environ.get('KB_AUTH_TOKEN', None)
         config_file = os.environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
@@ -27,11 +30,11 @@ class kb_motupanTest(unittest.TestCase):
         # Getting username from Auth profile for token
         authServiceUrl = cls.cfg['auth-service-url']
         auth_client = _KBaseAuth(authServiceUrl)
-        user_id = auth_client.get_user(token)
+        user_id = auth_client.get_user(cls.token)
         # WARNING: don't call any logging methods on the context object,
         # it'll result in a NoneType error
         cls.ctx = MethodContext(None)
-        cls.ctx.update({'token': token,
+        cls.ctx.update({'token': cls.token,
                         'user_id': user_id,
                         'provenance': [
                             {'service': 'kb_motupan',
@@ -40,14 +43,17 @@ class kb_motupanTest(unittest.TestCase):
                              }],
                         'authenticated': 1})
         cls.wsURL = cls.cfg['workspace-url']
+        cls.callback_url = os.environ['SDK_CALLBACK_URL']
         cls.wsClient = Workspace(cls.wsURL)
+        cls.gfu = GenomeFileUtil(cls.callback_url, token=cls.token)
         cls.serviceImpl = kb_motupan(cls.cfg)
         cls.scratch = cls.cfg['scratch']
-        cls.callback_url = os.environ['SDK_CALLBACK_URL']
         suffix = int(time.time() * 1000)
-        cls.wsName = "test_ContigFilter_" + str(suffix)
+        cls.wsName = "test_mOTUpan_" + str(suffix)
         ret = cls.wsClient.create_workspace({'workspace': cls.wsName})  # noqa
 
+        cls.prepare_data()
+        
 
     @classmethod
     def tearDownClass(cls):
@@ -96,6 +102,63 @@ class kb_motupanTest(unittest.TestCase):
     def getContext(self):
         return self.__class__.ctx
 
+    @classmethod
+    def ref_from_info(cls, obj_info):
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+        return "/".join([str(obj_info[WSID_I]), str(obj_info[OBJID_I]), str(obj_info[VERSION_I])])
+
+    def isUpa (self, candidate_upa):
+        legit_upa = True
+        for upa_element in candidate_upa.split('/'):
+            if not upa_element.isdigit():
+                print ("Error: not UPA element: "+upa_element)
+                legit_upa = False
+        return legit_upa
+        
+    @classmethod
+    def prepare_data(cls):
+        tempdir = Path(os.path.join(cls.scratch, 'tempstuff'))
+        tempdir.mkdir(parents=True, exist_ok=True)
+
+        
+        # genome set
+        cls.genomes = []
+        genome_elements = {}
+        for this_genome_id in ['GCF_014107475.1_ASM1410747v1',
+                               'GCF_014771645.1_ASM1477164v1']:
+                               #'GCF_016584425.1_ASM1658442v1',
+                               #'GCF_017896245.1_ASM1789624v1']:
+            this_gbff_filename = this_genome_id + '_genomic.gbff.gz'
+
+            # genome
+            gbfffile = tempdir / this_gbff_filename
+            copyfile(Path(__file__).parent / 'data' / this_gbff_filename, gbfffile)
+            genome_ref = cls.gfu.genbank_to_genome (
+                { "workspace_name": cls.wsName,
+                  "genome_name": this_genome_id,
+                  "file": {"path": str(gbfffile)},
+                  "source": "Genbank",
+                  "scientific_name": "Genus_foo species_bar",
+                  "generate_missing_genes": "True"                
+                })['genome_ref']
+            cls.genomes.append(genome_ref)
+            genome_elements[this_genome_id] = { 'ref': genome_ref }
+
+        # archaeal genomeSet
+        genomeSet_name = 'Wolbachia.GenomeSet'
+        genomeSet_obj = {'description': 'Test GS', 'elements': genome_elements }
+        try:
+            genomeSet_info = cls.wsClient.save_objects(
+                {'workspace': cls.wsName,
+                 'objects': [{
+                     'type': 'KBaseSearch.GenomeSet',
+                     'data': genomeSet_obj,
+                     'name': genomeSet_name
+                     }]})[0]
+        except Exception as e:
+            raise ValueError ("ABORT: unable to save GenomeSet object.\n"+str(e))
+        cls.genomeSet = cls.ref_from_info(genomeSet_info)
+
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
     # Prepare test objects in workspace if needed using
@@ -109,7 +172,8 @@ class kb_motupanTest(unittest.TestCase):
     # self.assertEqual(ret[...], ...) or other unittest methods
 
 
-
+    #### test_run_mmseqs2_and_mptupan_files_01 ():
+    #
     # HIDE @unittest.skip("skipped test_run_mmseqs2_and_mptupan_files_01()")  # uncomment to skip
     def test_run_mmseqs2_and_mptupan_files_01 (self):
         method = 'test_run_mmseqs2_and_mptupan_files_01'
@@ -148,6 +212,33 @@ class kb_motupanTest(unittest.TestCase):
         }
         
         ret = self.serviceImpl.run_mmseqs2_and_mOTUpan_files (self.ctx, params)
+
+        print('RESULT:')
+        pprint(ret)
+
+        pass
+
+
+    #### test_run_kb_motupan_genomeset_02 ():
+    #
+    # HIDE @unittest.skip("skipped test_run_kb_motupan_genomeset_02()")  # uncomment to skip
+    def test_run_kb_motupan_genomeset_02 (self):
+        method = 'test_run_kb_motupan_genomeset_02'
+        msg = "RUNNING: " + method + "()"
+        print("\n\n" + msg)
+        print("=" * len(msg) + "\n\n")
+
+        params = { 'workspace_name': self.wsName,
+                   'input_ref': self.genomeSet,
+                   'output_pangenome_name': 'foo.Pangenome',
+                   'checkm _version': 'CheckM-1',
+                   'mmseqs_cluster_mode': 'easy-cluster',
+                   'mmseqs_min_seq_id': 0.0,
+                   'mmseqs_min_coverage': 0.8,
+                   'motupan_max_iter': 1
+        }
+        
+        ret = self.serviceImpl.run_kb_motupan (self.ctx, params)
 
         print('RESULT:')
         pprint(ret)

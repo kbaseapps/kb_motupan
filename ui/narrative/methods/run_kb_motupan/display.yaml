@@ -1,0 +1,91 @@
+#
+# define display information
+#
+name: Calculate Pangenome with mOTUpan - v0.3.2
+
+tooltip: |
+    Calculate pangenome for microbial genomes, including MAGs of varying quality
+
+screenshots: []
+
+icon: motupan-purple.png
+
+#
+# define a set of similar apps that might be useful to the user
+#
+suggestions:
+    apps:
+        related:
+            [app1, app2]
+        next:
+            [app3, app4]
+
+#
+# Configure the display and description of parameters
+#
+parameters :
+    input_ref :
+        ui-name : |
+            Input GenomeSet or SpeciesTree
+        short-hint : |
+            A genome set or species tree with genomes for which to calculate pangenome.
+    output_pangenome_name :
+        ui-name : |
+            Output Pangenome
+        short-hint : |
+            Name for output Pangenome object.
+    checkm_version :
+        ui-name : |
+            CheckM version
+        short-hint : |
+            Version of CheckM to use for completeness evaluation of genomes (currently only CheckM supported).
+    mmseqs_cluster_mode :
+        ui-name : |
+            MMseqs2 cluster mode
+        short-hint : |
+            Cluster proteins with faster linclust or regular MMSeqs2 easy-cluster mdoe.
+    mmseqs_min_seq_id :
+        ui-name : |
+            MMseqs2 minimum sequence identity
+        short-hint : |
+            Threshold percentage (0.0-100.0) of aligned sequence identity for sequences to be allowed in same cluster (default: 0.0)
+    mmseqs_min_coverage :
+        ui-name : |
+            MMseqs2 minimum coverage
+        short-hint : |
+            Threshold fraction (0.0-1.0) of aligned coverage overlap for sequences to be allowed in same cluster (default: 0.8 - 80%)
+    motupan_max_iter :
+        ui-name : |
+            mOTUpan maximum iterations
+        short-hint : |
+            Stop iterations of core/completeness evaluations in mOTUpan if hit limit (Note: if all input genomes high completeness results will be the same or close at 1 iteration).
+
+
+description : |
+    <h3>Description</h3>
+    <p><b><a href="https://github.com/moritzbuck/mOTUlizer</a></b> is a utility to analyse a group of closely related MAGs/Genomes/bins/SAGs of more or less dubious origin.</p>
+
+    <h3>References</h3>
+    <p>mOTUpan is described in:</p>
+        <ul>
+            <li>Moritz Buck, Maliheh Mehrshad, Stefan Bertilsson.  mOTUpan: a robust Bayesian approach to leverage metagenome-assembled genomes for core-genome estimation. NAR Genom Bioinform. 2022 Aug 15;4(3):lqac060. doi: 10.1093/nargab/lqac060.</li>
+        </ul>
+    
+
+    <p>We also strongly encourage you to cite the following 3rd party dependency:</p>
+    <br>
+    <ul>
+        <li>Martin Steinegger, Johannes Söding.  MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets.  Nat Biotechnol. 2017 Nov;35(11):1026-1028. doi: 10.1038/nbt.3988</li>
+    </ul>
+    
+publications : 
+    -
+        pmid: 35979445
+        display-text: |
+            Moritz Buck, Maliheh Mehrshad, Stefan Bertilsson.  mOTUpan: a robust Bayesian approach to leverage metagenome-assembled genomes for core-genome estimation. NAR Genom Bioinform. 2022 Aug 15;4(3):lqac060. doi: 10.1093/nargab/lqac060.
+        link: https://doi.org/10.1093/nargab/lqac060
+    -
+        pmid: 29035372
+        display-text: |
+            Martin Steinegger, Johannes Söding.	 MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets.	 Nat Biotechnol. 2017 Nov;35(11):1026-1028. doi: 10.1038/nbt.3988
+        link: https://doi.org/10.1038/nbt.3988

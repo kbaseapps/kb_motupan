@@ -23,10 +23,13 @@ def getargs():
     parser = argparse.ArgumentParser(description="parse mOTUpan output into JSON")
 
     parser.add_argument("-m", "--mOTUpan_infile", help="mOTUpan output file to reformat")
+    parser.add_argument("-r", "--reference_map_infile", help="genome name to kbase object reference map file")
     parser.add_argument("-g", "--genefamily_mmseqs_infile", help="mmseqs2 gene family clusters file")
     parser.add_argument("-i", "--id_map_file", help="file with gene id mapping")
     parser.add_argument("-p", "--pangenome_outfile", help="json pangenome out file")
     parser.add_argument("-c", "--completeness_outfile", help="posterior completeness scores calculated by mOTUpan")
+    parser.add_argument("-f", "--force_oldfields", help="don't write newer pangenome typedef fields (True/False)")
+
     args = parser.parse_args()
 
     args_pass = True
@@ -63,12 +66,40 @@ def getargs():
         args.pangenome_outfile = args.mOTUpan_infile+'.json'
     if args.completeness_outfile is None:
         args.pangenome_outfile = args.mOTUpan_infile+'.completeness'
+
+    if args.force_oldfields is None or args.force_oldfields.upper().startswith('F'):
+        args.force_oldfields = False
+    else:
+        args.force_oldfields = True
         
     if not args_pass:
         parser.print_help()
         sys.exit (-1)
         
     return args
+
+
+# get_genome_name2ref_map ()
+#
+def get_genome_name2ref_map (reference_map_infile):
+
+    print ("reading genome name to reference map file {} ...".format(reference_map_infile))
+
+    genome_name2ref_map = dict()
+    
+    if reference_map_infile.lower().endswith('.gz'):
+        f = gzip.open(reference_map_infile, 'rt')
+    else:
+        f = open(reference_map_infile, 'r')
+
+    for line in f:
+        line = line.rstrip()
+
+        (genome_name, genome_ref) = line.split("\t")
+        genome_name2ref_map[genome_name] = genome_ref
+    f.close()
+
+    return genome_name2ref_map
 
 
 # get_gene2gene_map ()
@@ -145,7 +176,12 @@ def get_completeness_scores (mOTUpan_infile):
 
 # get_pangenome_obj ()
 #
-def get_pangenome_obj (mOTUpan_infile, gene2gene_map, cluster_genes, completeness_scores):
+def get_pangenome_obj (mOTUpan_infile,
+                       genome_name2ref_map,
+                       gene2gene_map,
+                       cluster_genes,
+                       completeness_scores,
+                       force_oldfields):
     print ("reading mOTUpan file {} for pangenome_obj ...".format(mOTUpan_infile))
 
     # init structs
@@ -161,6 +197,12 @@ def get_pangenome_obj (mOTUpan_infile, gene2gene_map, cluster_genes, completenes
     # get genome names
     genome_names = sorted(completeness_scores.keys())
 
+    # get genome refs
+    genome_refs = []
+    if genome_name2ref_map:
+        for genome_name in genome_names:
+            genome_refs.append(genome_name2ref_map[genome_name])
+    
     # assign type
     pangenome_type = 'mOTUpan'
     
@@ -204,17 +246,24 @@ def get_pangenome_obj (mOTUpan_infile, gene2gene_map, cluster_genes, completenes
             this_cluster = dict()
             this_cluster['function'] = ''
             this_cluster['id'] = cluster_id
-            this_cluster['genome_occ'] = int(genome_occurences)
-            this_cluster['cat'] = cat_acc_core  # either 'accessory' or 'core'
-            this_cluster['core_log_likelihood'] = float(log_likelihood_to_be_core)
-            this_cluster['mean_copies'] = float(mean_copy_per_genome) * len(cluster_genes[cluster_id])
+            if not force_oldfields:
+                this_cluster['genome_occ'] = int(genome_occurences)
+                this_cluster['cat'] = cat_acc_core  # either 'accessory' or 'core'
+                this_cluster['core_log_likelihood'] = float(log_likelihood_to_be_core)
+                this_cluster['mean_copies'] = float(mean_copy_per_genome) * len(cluster_genes[cluster_id])
+
             these_genes = []
             #for gene_id in genes_in_clust.split(';'):
             #    these_genes.append([gene_id, gene2order[gene_id], gene2genome_map[gene_id]])
             for genome_based_gene_id in cluster_genes[cluster_id]:
-                scaffold_based_gene_id = gene2gene_map[genome_based_gene_id]
-                gene_order = re.sub('^GC[AF]_\d+\.\d+_', '', genome_based_gene_id)
-                genome_id = re.sub('_\d+$', '', genome_based_gene_id)
+                scaffold_based_gene_id = re.sub('^.*\.f:', '', gene2gene_map[genome_based_gene_id])
+                gene_order = int(re.sub('^.+_', '', genome_based_gene_id))
+                genome_name = re.sub('_\d+$', '', genome_based_gene_id)
+                genome_ref = genome_name2ref_map[genome_name]
+                if force_oldfields:
+                    genome_id = genome_ref
+                else:
+                    genome_id = genome_name
                 these_genes.append([scaffold_based_gene_id,
                                     gene_order,
                                     genome_id])
@@ -227,15 +276,17 @@ def get_pangenome_obj (mOTUpan_infile, gene2gene_map, cluster_genes, completenes
     # build pangenome_obj
     pangenome_obj['name'] = pangenome_name
     pangenome_obj['id'] = pangenome_id
-    pangenome_obj['genome_names'] = genome_names
     pangenome_obj['type'] = 'mOTUpan'
-    pangenome_obj['type_ver'] = type_ver
-    pangenome_obj['genome_count'] = int(genome_count)
-    pangenome_obj['core_length'] = int(core_length)
-    pangenome_obj['mean_est_genome_size'] = float(mean_est_genome_size)
-    pangenome_obj['prior_genome_completeness'] = prior_genome_completeness
-    pangenome_obj['posterior_genome_completeness'] = posterior_genome_completeness
     pangenome_obj['orthologs'] = orthologs
+    pangenome_obj['genome_refs'] = genome_refs
+    if not force_oldfields:
+        pangenome_obj['genome_names'] = genome_names
+        pangenome_obj['type_ver'] = type_ver
+        pangenome_obj['genome_count'] = int(genome_count)
+        pangenome_obj['core_length'] = int(core_length)
+        pangenome_obj['mean_est_genome_size'] = float(mean_est_genome_size)
+        pangenome_obj['prior_genome_completeness'] = prior_genome_completeness
+        pangenome_obj['posterior_genome_completeness'] = posterior_genome_completeness
     
     return pangenome_obj
     
@@ -275,6 +326,11 @@ def write_pangenome_json_file (pangenome_outfile, pangenome_obj):
 def main() -> int:
     args = getargs()
 
+    # read genome_name to ref mapping
+    genome_name2ref_map = dict()
+    if args.reference_map_infile:
+        genome_name2ref_map = get_genome_name2ref_map (args.reference_map_infile)
+
     # read gene id to gene id mapping
     gene2gene_map = get_gene2gene_map (args.id_map_file)
 
@@ -286,7 +342,12 @@ def main() -> int:
     write_completeness_file (args.completeness_outfile, completeness_scores)
 
     # parse out clusters and gene ids and write json file
-    pangenome_obj = get_pangenome_obj (args.mOTUpan_infile, gene2gene_map, cluster_genes, completeness_scores)
+    pangenome_obj = get_pangenome_obj (args.mOTUpan_infile,
+                                       genome_name2ref_map,
+                                       gene2gene_map,
+                                       cluster_genes,
+                                       completeness_scores,
+                                       args.force_oldfields)
     write_pangenome_json_file (args.pangenome_outfile, pangenome_obj)
 
     return 0
