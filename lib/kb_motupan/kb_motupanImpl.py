@@ -20,6 +20,7 @@ from installed_clients.DataFileUtilClient import DataFileUtil
 
 # KBase modules
 from installed_clients.kb_MsuiteClient import kb_Msuite
+from installed_clients.kb_phylogenomicsClient import kb_phylogenomics
 #END_HEADER
 
 
@@ -40,7 +41,7 @@ class kb_motupan:
     ######################################### noqa
     VERSION = "0.0.2"
     GIT_URL = "https://github.com/kbaseapps/kb_motupan.git"
-    GIT_COMMIT_HASH = "a467fb9bd4f1ebffa00b213cb8fcaebac12b98c8"
+    GIT_COMMIT_HASH = "ec43fa25a92b7d1098ccd1d0ae6807297e7c2cf8"
 
     #BEGIN_CLASS_HEADER
     workspaceURL = None
@@ -231,7 +232,8 @@ class kb_motupan:
         if need_to_run_checkm:
 
             # DEBUG since can't run CheckM without refdata
-            TEST_MODE = False
+            #TEST_MODE = False
+            TEST_MODE = True
             if TEST_MODE:
                 for genome_i,genome_name in enumerate(genome_names):
                     genome_qual_scores[genome_name] = dict()
@@ -239,10 +241,11 @@ class kb_motupan:
                     genome_qual_scores[genome_name]['contamination'] = 2.0
                 return genome_qual_scores
                 
-            try:
-                checkM_Client = kb_Msuite(self.callbackURL, token=self.token, service_ver=self.SERVICE_VER)
-            except Exception as e:
-                raise ValueError("unable to instantiate checkM_Client. "+str(e))            
+            else:
+                try:
+                    checkM_Client = kb_Msuite(self.callbackURL, token=self.token, service_ver=self.SERVICE_VER)
+                except Exception as e:
+                    raise ValueError("unable to instantiate checkM_Client. "+str(e))            
 
 
             # TODO: this should be run on top obj but currently CheckM doesn't support trees.
@@ -319,8 +322,48 @@ class kb_motupan:
                         genome_qual_scores[genome_name]['contamination'] = str(checkM_info[CONTAMINATION_I])  # percent
             
         return genome_qual_scores
-                
 
+
+    ### run_pangenome_circle_plot()
+    #
+    def run_pangenome_circle_plot (self, pangenome_upa, calling_params):
+        objects_created = []
+        file_links = []
+        html_links = []
+        
+        try:
+            phylogenomics_Client = kb_phylogenomics(self.callbackURL, token=self.token, service_ver=self.SERVICE_VER)
+        except Exception as e:
+            raise ValueError("unable to instantiate phylogenomics_Client. "+str(e))
+        
+        circle_plot_params = {
+            'workspace_name': calling_params['workspace_name'],
+            'input_genome_ref': calling_params['pc_input_genome_ref'],
+            'input_pangenome_ref': pangenome_upa,
+            'save_featuresets': calling_params['pc_save_featuresets'],
+            'genome_disp_name_config': calling_params['pc_genome_disp_name_config']
+            }
+        if 'input_compare_genome_refs' in calling_params:
+            circle_plot_params['input_compare_genome_refs'] = calling_params['input_compare_genome_refs']
+        if 'input_outgroup_genome_refs' in calling_params:
+            circle_plot_params['input_outgroup_genome_refs'] = calling_params['pc_input_outgroup_genome_refs']
+
+        this_retVal = phylogenomics_Client.view_pan_circle_plot (circle_plot_params)
+
+        try:
+            this_report_obj = self.wsClient.get_objects2({'objects':[{'ref':this_retVal['report_ref']}]})['data'][0]['data']
+        except Exception as e:
+            raise ValueError("unable to fetch "+sub_method+" report: " + this_retVal['report_ref']+". "+str(e))
+        if 'objects_created' in this_report_obj:
+            objects_created = this_report_obj['objects_created']
+        if 'file_links' in this_report_obj:
+            file_links = this_report_obj['file_links']
+        if 'html_links' in this_report_obj:
+            html_links = this_report_obj['html_links']
+
+        return (objects_created, file_links, html_links)
+    
+        
     ### prepare_motupan_files ()
     #
     def prepare_motupan_files (self, genome_objs, genome_qual_scores, console):
@@ -377,14 +420,15 @@ class kb_motupan:
             # rewrite gene ids to match genome_id as base and store old genome id
             gene_cnt = 0
 
-            for cds in genome_obj['data']['cdss']:
-                if 'protein_translation' in cds:
+            #for cds in genome_obj['data']['cdss']:
+            for feature in genome_obj['data']['features']:
+                if feature.get('protein_translation'):
                     gene_cnt += 1
-                    old_gene_id = genome_name+'.f:'+cds['id']
+                    old_gene_id = genome_name+'.f:'+feature['id']
                     new_gene_id = genome_name+'_'+str(gene_cnt)
                     id_map_buf.append("\t".join([new_gene_id,old_gene_id]))
                     faa_buf.append('>'+new_gene_id)
-                    faa_buf.append(cds['protein_translation'])
+                    faa_buf.append(feature['protein_translation'])
             
         # write files and save path to return
         with open (faa_out_file, 'w') as faa_path_handle:
@@ -465,47 +509,63 @@ class kb_motupan:
 
     ### create_motupan_report ()
     #
-    def create_motupan_report (self, workspace_name, pangenome_upa, run_dir, html_dir, console):
-        report = dict()
+    def create_motupan_report (self,
+                               workspace_name,
+                               pangenome_upa,
+                               run_dir,
+                               cp_objects_created,
+                               cp_file_links,
+                               cp_html_links,
+                               console):
+
+        objects_created = []
+        file_links = []
+        html_links = []
 
         report_name = 'kb_motupan_report_' + str(uuid.uuid4())
-
-        """
-        copyfile(Path(__file__).parent / 'index.html', gtdbtk_output_dir / 'index.html')
-        upload_ret = clients.dfu().file_to_shock({'file_path': str(gtdbtk_output_dir),
-                                                  'make_handle': 0,
-                                                  'pack': 'zip'})
-    
+        
+        # archive run
+        upload_ret = self.dfuClient.file_to_shock({'file_path': str(run_dir),
+                                                   'make_handle': 0,
+                                                   'pack': 'zip'})
         output_file_archive = {
             'shock_id': upload_ret['shock_id'],
-            'name': 'GTDB-Tk_classify_wf.zip',
-            'description': 'GTDB-Tk Classify WF output'
+            'name': 'mOTUpan_run_archive.zip',
+            'description': 'mOTUpan run output'
         }
-    
-        html_file = {
-            'path': str(gtdbtk_output_dir),
-            'name': 'index.html',
-            'label': 'index.html',
-            'description': 'HTML report for GTDBTk Classify'
-        }
+        file_links.append (output_file_archive)
 
+        # put pangenome into objects created
+        pg_desc = 'Calculated Pangenome'
+        objects_created.append({'ref': pangenome_upa, 'description': pg_desc})
+
+        # add pangenome circle plot output
+        objects_created.extend (cp_objects_created)
+
+        for file_link_item in cp_file_links:  # file links can't just be extended
+            #this_shock_id = file_link_item['URL']
+            this_shock_id = re.sub('^.*/', '', file_link_item['URL'])
+            new_file_link_item = {'shock_id': this_shock_id,
+                                  'name': file_link_item['name'],
+                                  'label': file_link_item['label']
+            }
+            file_links.append(new_file_link_item)
+            
+        for html_link_item in cp_html_links:  # html links can't just be extended
+            #this_shock_id = html_link_item['URL']
+            this_shock_id = re.sub('^.*/', '', html_link_item['URL'])
+            new_html_link_item = {'shock_id': this_shock_id,
+                                  'name': html_link_item['name'],
+                                  'label': html_link_item['label']
+            }
+            html_links.append(new_html_link_item)            
+            
+
+        # create report
         report_params = {
             'direct_html_link_index': 0,
-            'html_links': [html_file],
-            'file_links': [output_file_archive],
-            'report_object_name': report_name,
-            'workspace_id': workspace_id
-        }
-        if objects_created is not None:
-            report_params['objects_created'] = objects_created
-        """
-
-        objects_created = [{'ref': pangenome_upa, 'description': 'mOTUpan Pangenome'}]
-
-        report_params = {
-            'direct_html_link_index': 0,
-            'html_links': [],
-            'file_links': [],
+            'html_links': html_links,
+            'file_links': file_links,
             'report_object_name': report_name,
             'workspace_name': workspace_name
         }
@@ -576,7 +636,8 @@ class kb_motupan:
            and mOTUpan from files) -> structure: parameter "input_faa_path"
            of type "file_path", parameter "input_qual_path" of type
            "file_path", parameter "input_gene_id_map_path" of type
-           "file_path", parameter "run_dir" of type "file_path", parameter
+           "file_path", parameter "genome_name2ref_path" of type "file_path",
+           parameter "run_dir" of type "file_path", parameter
            "output_pangenome_json_path" of type "file_path", parameter
            "mmseqs_cluster_mode" of String, parameter "mmseqs_min_seq_id" of
            Double, parameter "mmseqs_min_coverage" of Double, parameter
@@ -651,7 +712,12 @@ class kb_motupan:
             #self.run_subprocess (mmseqs_cmd, params['run_dir'], console)  # too verbose
             self.run_subprocess (mmseqs_cmd, params['run_dir'])
 
-
+            # clean up mmseqs_workdir because symlinks to nothng mess up archive
+            (rundir_path, faa_file) = os.path.split (params['input_faa_path'])
+            mmseqs_workdir_path = os.path.join (rundir_path, mmseqs_workdir)
+            shutil.rmtree (mmseqs_workdir_path)
+            
+        
         # 2. format genome clusters for mOTUpan
         #
         motupan_genome_cluster_file = os.path.join (params['run_dir'], cluster_basename+'-motupan_in.json')
@@ -753,7 +819,11 @@ class kb_motupan:
            "checkm_version" of String, parameter "mmseqs_cluster_mode" of
            String, parameter "mmseqs_min_seq_id" of Double, parameter
            "mmseqs_min_coverage" of Double, parameter "motupan_max_iter" of
-           Long
+           Long, parameter "pc_input_genome_ref" of type "data_obj_ref",
+           parameter "pc_input_compare_genome_refs" of type "data_obj_ref",
+           parameter "pc_input_outgroup_genome_refs" of type "data_obj_ref",
+           parameter "pc_save_featuresets" of type "bool", parameter
+           "pc_genome_disp_name_config" of String
         :returns: instance of type "ReportResults" (Report results **   
            report_name: The name of the report object in the workspace. **   
            report_ref: The UPA of the report object, e.g. wsid/objid/ver.) ->
@@ -826,9 +896,24 @@ class kb_motupan:
                                                  console)
         
 
-        ### STEP 7: make report
+        ### STEP 7: run pangenome circle plot
+        self.log(console, "GETTING PANGENOME CIRCLE PLOT")
+        circle_plot_limit = 20
+        if len (genome_refs) > circle_plot_limit:
+            self.log(console, "TOO MANY GENOMES TO PLOT")
+        else:
+            (cp_objects_created, cp_file_links, cp_html_links) = self.run_pangenome_circle_plot (pangenome_upa, params)
+
+            
+        ### STEP 8: make report
         self.log(console, "CREATING REPORT")
-        report_info = self.create_motupan_report (params['workspace_name'], pangenome_upa, motupan_input_files['run_dir'], html_dir, console)
+        report_info = self.create_motupan_report (params['workspace_name'],
+                                                  pangenome_upa,
+                                                  motupan_input_files['run_dir'],
+                                                  cp_objects_created,
+                                                  cp_file_links,
+                                                  cp_html_links,
+                                                  console)
         
         output = {'report_name': report_info['name'],
                   'report_ref': report_info['ref']

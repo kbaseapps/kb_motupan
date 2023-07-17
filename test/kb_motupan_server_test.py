@@ -120,14 +120,21 @@ class kb_motupanTest(unittest.TestCase):
         tempdir = Path(os.path.join(cls.scratch, 'tempstuff'))
         tempdir.mkdir(parents=True, exist_ok=True)
 
-        
-        # genome set
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+
+        # prepare genome set and tree
         cls.genomes = []
-        genome_elements = {}
-        for this_genome_id in ['GCF_014107475.1_ASM1410747v1',
-                               'GCF_014771645.1_ASM1477164v1']:
-                               #'GCF_016584425.1_ASM1658442v1',
-                               #'GCF_017896245.1_ASM1789624v1']:
+        gs_genome_elements = {}
+        tree_ws_refs = dict()
+        tree_default_node_labels = dict()
+        tree_leaf_list = []
+        tree_newick = '("GCF_014107475.1_ASM1410747v1":0.0655035,("GCF_014771645.1_ASM1477164v1":0.010225,("GCF_016584425.1_ASM1658442v1":0.00859808,"GCF_017896245.1_ASM1789624v1":0.010)0.0519334)0.0191353);'
+        for this_genome_id in [
+                # wolbachia
+                'GCF_014107475.1_ASM1410747v1',
+                'GCF_014771645.1_ASM1477164v1',
+                'GCF_016584425.1_ASM1658442v1',
+                'GCF_017896245.1_ASM1789624v1']:
             this_gbff_filename = this_genome_id + '_genomic.gbff.gz'
 
             # genome
@@ -142,22 +149,52 @@ class kb_motupanTest(unittest.TestCase):
                   "generate_missing_genes": "True"                
                 })['genome_ref']
             cls.genomes.append(genome_ref)
-            genome_elements[this_genome_id] = { 'ref': genome_ref }
 
-        # archaeal genomeSet
+            # prep container obj data
+            gs_genome_elements[this_genome_id] = { 'ref': genome_ref }
+            tree_ws_refs[this_genome_id] = {'g': [genome_ref]}
+            tree_default_node_labels[this_genome_id] = this_genome_id
+            tree_leaf_list.append(this_genome_id)
+
+
+        # save GenomeSet
         genomeSet_name = 'Wolbachia.GenomeSet'
-        genomeSet_obj = {'description': 'Test GS', 'elements': genome_elements }
+        genomeSet_obj_data = {'description': 'Test GS', 'elements': gs_genome_elements }
         try:
             genomeSet_info = cls.wsClient.save_objects(
                 {'workspace': cls.wsName,
                  'objects': [{
                      'type': 'KBaseSearch.GenomeSet',
-                     'data': genomeSet_obj,
+                     'data': genomeSet_obj_data,
                      'name': genomeSet_name
                      }]})[0]
         except Exception as e:
             raise ValueError ("ABORT: unable to save GenomeSet object.\n"+str(e))
         cls.genomeSet = cls.ref_from_info(genomeSet_info)
+
+
+        # save Tree
+        tree_name = 'Wolbachia.Tree'
+        tree_obj_data = { 'name': tree_name,
+                          'description': 'test tree',
+                          'type': 'SpeciesTree',
+                          'tree': tree_newick,
+                          'default_node_labels': tree_default_node_labels,
+                          'ws_refs': tree_ws_refs,
+                          'leaf_list': tree_leaf_list
+                        }
+
+        try:
+            tree_info = cls.wsClient.save_objects(
+                {'workspace': cls.wsName,
+                 'objects': [{
+                     'type': 'KBaseTrees.Tree',
+                     'data': tree_obj_data,
+                     'name': tree_name
+                     }]})[0]
+        except Exception as e:
+            raise ValueError ("ABORT: unable to save Tree object.\n"+str(e))
+        cls.tree = cls.ref_from_info(tree_info)
 
 
     # NOTE: According to Python unittest naming rules test method names should start from 'test'. # noqa
@@ -191,17 +228,21 @@ class kb_motupanTest(unittest.TestCase):
         faa_file = target+'.faa'
         qual_file = target+'.checkm'
         id_map_file = target+'.gene_id_map'
+        genome_id_map_file = target+'.genome_name_to_ref.map'
         faa_path = os.path.join (run_dir, faa_file)
         qual_path = os.path.join (run_dir, qual_file)
         id_map_path = os.path.join (run_dir, id_map_file)
+        genome_id_map_path = os.path.join (run_dir, genome_id_map_file)
         shutil.copy (os.path.join('data',faa_file), faa_path)
         shutil.copy (os.path.join('data',qual_file), qual_path)
         shutil.copy (os.path.join('data',id_map_file), id_map_path)
+        shutil.copy (os.path.join('data',genome_id_map_file), genome_id_map_path)
 
 
         params = { 'input_faa_path': faa_path,
                    'input_qual_path': qual_path,
                    'input_gene_id_map_path': id_map_path,
+                   'genome_name2ref_path': genome_id_map_path,
                    'run_dir': run_dir,
                    'output_pangenome_json_path': output_pg_path,
                    'mmseqs_cluster_mode': 'easy-cluster',
@@ -228,14 +269,23 @@ class kb_motupanTest(unittest.TestCase):
         print("\n\n" + msg)
         print("=" * len(msg) + "\n\n")
 
+
+        input_ref = self.genomeSet
         params = { 'workspace_name': self.wsName,
-                   'input_ref': self.genomeSet,
+                   'input_ref': input_ref,
                    'output_pangenome_name': 'foo.Pangenome',
                    'checkm _version': 'CheckM-1',
                    'mmseqs_cluster_mode': 'easy-cluster',
                    'mmseqs_min_seq_id': 0.0,
                    'mmseqs_min_coverage': 0.8,
-                   'motupan_max_iter': 1
+                   'motupan_max_iter': 1,
+                   'pc_input_genome_ref': self.genomes[0],
+                   #'pc_input_compare_genome_refs': [],
+                   #'pc_input_compare_genome_refs': None,
+                   'pc_input_compare_genome_refs': [self.genomes[0], self.genomes[1], self.genomes[2], self.genomes[3]],
+                   'pc_input_outgroup_genome_refs': [self.genomes[3]],
+                   'pc_save_featuresets': 1,
+                   'pc_genome_disp_name_config': 'obj_name_ver_sci_name'
         }
         
         ret = self.serviceImpl.run_kb_motupan (self.ctx, params)
@@ -244,3 +294,37 @@ class kb_motupanTest(unittest.TestCase):
         pprint(ret)
 
         pass
+
+
+    #### test_run_kb_motupan_tree_03 ():
+    #
+    # HIDE @unittest.skip("skipped test_run_kb_motupan_tree_03()")  # uncomment to skip
+    def test_run_kb_motupan_tree_03 (self):
+        method = 'test_run_kb_motupan_tree_03'
+        msg = "RUNNING: " + method + "()"
+        print("\n\n" + msg)
+        print("=" * len(msg) + "\n\n")
+
+
+        input_ref = self.tree
+        params = { 'workspace_name': self.wsName,
+                   'input_ref': input_ref,
+                   'output_pangenome_name': 'foo.Pangenome',
+                   'checkm _version': 'CheckM-1',
+                   'mmseqs_cluster_mode': 'easy-cluster',
+                   'mmseqs_min_seq_id': 0.0,
+                   'mmseqs_min_coverage': 0.8,
+                   'motupan_max_iter': 1,
+                   'pc_input_genome_ref': self.genomes[0],
+                   'pc_input_outgroup_genome_refs': [self.genomes[3]],
+                   'pc_save_featuresets': 1,
+                   'pc_genome_disp_name_config': 'obj_name_ver_sci_name'
+        }
+        
+        ret = self.serviceImpl.run_kb_motupan (self.ctx, params)
+
+        print('RESULT:')
+        pprint(ret)
+
+        pass
+    

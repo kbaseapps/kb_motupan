@@ -59,7 +59,31 @@ parameters :
             mOTUpan maximum iterations
         short-hint : |
             Stop iterations of core/completeness evaluations in mOTUpan if hit limit (Note: if all input genomes high completeness results will be the same or close at 1 iteration).
-
+    pc_input_genome_ref :
+        ui-name : |
+            Base Genome
+        short-hint : |
+            The Genome to use as the base of the circle plot.
+    pc_input_compare_genome_refs :
+        ui-name : |
+            Custom Compare Genome(s)
+        short-hint : |
+            The Genome(s) to compare against the base.
+    pc_input_outgroup_genome_refs :
+        ui-name : |
+            Outgroup Genome(s)
+        short-hint : |
+            The Genome(s) to use as outgroup to distinguish clade-specific core.
+    pc_genome_disp_name_config :
+        ui-name : |
+            Display genome as
+        short-hint : |
+            Use the object name, object version, and/or scientific name of the Genome in the function profile report
+    pc_save_featuresets :
+        ui-name : |
+            Save pangenome FeatureSets
+        short-hint : |
+            The Pangenome core, singleton, and partial pangenome FeatureSet objects.
 
 description : |
     <h3>Description</h3>

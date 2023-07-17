@@ -37,9 +37,10 @@ module kb_motupan {
 	file_path input_faa_path;
 	file_path input_qual_path;
 	file_path input_gene_id_map_path;
+	file_path genome_name2ref_path;
 	file_path run_dir;
 	file_path output_pangenome_json_path;
-
+	
 	string mmseqs_cluster_mode;
 	float  mmseqs_min_seq_id;
 	/*int    mmseqs_cov_mode;*/
@@ -69,6 +70,12 @@ module kb_motupan {
 	/*int    mmseqs_cov_mode;*/
 	float  mmseqs_min_coverage;
 	int    motupan_max_iter;
+
+        data_obj_ref   pc_input_genome_ref;
+        data_obj_ref   pc_input_compare_genome_refs;
+        data_obj_ref   pc_input_outgroup_genome_refs;
+        bool           pc_save_featuresets;
+        string         pc_genome_disp_name_config;	
     } run_kb_motupan_Params;
     
     funcdef run_kb_motupan (run_kb_motupan_Params params)  returns (ReportResults output) authentication required;
