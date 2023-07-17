@@ -19,7 +19,7 @@
             "field_type": "text",
             "text_options": {
 		"is_output_name": false,
-                "valid_ws_types": ["KBaseSets.GenomeSet",
+                "valid_ws_types": ["KBaseSearch.GenomeSet",
                                    "KBaseTrees.Tree"]
             }
         },
@@ -45,7 +45,7 @@
             "dropdown_options": {
                 "options": [
                     {
-                        "value": "ChecmM-1",
+                        "value": "CheckM-1",
                         "display": "CheckM (ver 1)",
                         "id": "checkm_version-CheckM-1",
                         "ui-name": "checkm_version-CheckM-1"
