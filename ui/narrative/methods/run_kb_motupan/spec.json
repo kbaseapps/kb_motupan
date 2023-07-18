@@ -247,27 +247,22 @@
                 },{
                     "input_parameter": "motupan_max_iter",
                     "target_property": "motupan_max_iter"
-                },
-                {
+                },{
                     "input_parameter": "pcp_input_genome_ref",
                     "target_property": "pcp_input_genome_ref",
                     "target_type_transform": "resolved-ref"
-                },
-                {
+                },{
                     "input_parameter": "pcp_input_compare_genome_refs",
                     "target_property": "pcp_input_compare_genome_refs",
                     "target_type_transform": "list<resolved-ref>"
-                },
-                {
+                },{
                     "input_parameter": "pcp_input_outgroup_genome_refs",
                     "target_property": "pcp_input_outgroup_genome_refs",
                     "target_type_transform": "list<resolved-ref>"
-                },
-                {
+                },{
                     "input_parameter": "pcp_genome_disp_name_config",
                     "target_property": "pcp_genome_disp_name_config"
-                },
-                {
+                },{
                     "input_parameter": "pcp_save_featuresets",
                     "target_property": "pcp_save_featuresets"
                 }
