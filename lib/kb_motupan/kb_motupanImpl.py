@@ -337,7 +337,7 @@ class kb_motupan:
             raise ValueError("unable to instantiate phylogenomics_Client. "+str(e))
 
         if not calling_params.get('pcp_input_genome_ref'):
-            self.log(console, "DETERMIONING CENTROID GENOME TO USE AS BASE")
+            self.log(console, "DETERMINING CENTROID GENOME TO USE AS BASE")
             base_genome_ref = self.get_base_genome_ref (pangenome_upa, console)
         else:
             self.log(console, "USING REQUESTED GENOME {} AS BASE".format(calling_params['pcp_input_genome_ref']))
@@ -376,8 +376,9 @@ class kb_motupan:
     def get_base_genome_ref (self, pangenome_upa, console):
         base_genome_ref = None
 
-        pg_obj_data = self.dfuClient.get_objects({'object_refs':[pangenome_upa]})['data'][0]
-
+        pg_obj = self.dfuClient.get_objects({'object_refs':[pangenome_upa]})['data'][0]
+        pg_obj_data = pg_obj['data']
+        
         centroid_score = dict()
 
         for cluster in pg_obj_data['orthologs']:
@@ -530,7 +531,7 @@ class kb_motupan:
         if 'id' not in pg_data:
             pg_data['id'] = output_pangenome_name
         
-        self.log(console, "saving pangeoome object {}".format(output_pangenome_name))
+        self.log(console, "saving pangenome object {}".format(output_pangenome_name))
         try:
             pg_obj_info = self.wsClient.save_objects(
                 { 'workspace': workspace_name,
