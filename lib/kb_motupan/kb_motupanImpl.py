@@ -41,7 +41,7 @@ class kb_motupan:
     ######################################### noqa
     VERSION = "0.0.2"
     GIT_URL = "https://github.com/kbaseapps/kb_motupan.git"
-    GIT_COMMIT_HASH = "ec43fa25a92b7d1098ccd1d0ae6807297e7c2cf8"
+    GIT_COMMIT_HASH = "6add5ae5a2c5d1c5fd97654f2047fa7884edd6b6"
 
     #BEGIN_CLASS_HEADER
     workspaceURL = None
@@ -326,7 +326,7 @@ class kb_motupan:
 
     ### run_pangenome_circle_plot()
     #
-    def run_pangenome_circle_plot (self, pangenome_upa, calling_params):
+    def run_pangenome_circle_plot (self, pangenome_upa, calling_params, console):
         objects_created = []
         file_links = []
         html_links = []
@@ -335,18 +335,23 @@ class kb_motupan:
             phylogenomics_Client = kb_phylogenomics(self.callbackURL, token=self.token, service_ver=self.SERVICE_VER)
         except Exception as e:
             raise ValueError("unable to instantiate phylogenomics_Client. "+str(e))
-        
+
+        if not calling_params.get('pcp_input_genome_ref'):
+            base_genome_ref = self.get_base_genome_ref (pangenome_upa, console)
+        else:
+            base_genome_ref = calling_params['pcp_input_genome_ref']
+            
         circle_plot_params = {
             'workspace_name': calling_params['workspace_name'],
-            'input_genome_ref': calling_params['pc_input_genome_ref'],
+            'input_genome_ref': base_genome_ref,
             'input_pangenome_ref': pangenome_upa,
-            'save_featuresets': calling_params['pc_save_featuresets'],
-            'genome_disp_name_config': calling_params['pc_genome_disp_name_config']
+            'save_featuresets': calling_params['pcp_save_featuresets'],
+            'genome_disp_name_config': calling_params['pcp_genome_disp_name_config']
             }
-        if 'input_compare_genome_refs' in calling_params:
+        if calling_params.get('input_compare_genome_refs'):
             circle_plot_params['input_compare_genome_refs'] = calling_params['input_compare_genome_refs']
-        if 'input_outgroup_genome_refs' in calling_params:
-            circle_plot_params['input_outgroup_genome_refs'] = calling_params['pc_input_outgroup_genome_refs']
+        if calling_params.get('input_outgroup_genome_refs'):
+            circle_plot_params['input_outgroup_genome_refs'] = calling_params['pcp_input_outgroup_genome_refs']
 
         this_retVal = phylogenomics_Client.view_pan_circle_plot (circle_plot_params)
 
@@ -362,8 +367,41 @@ class kb_motupan:
             html_links = this_report_obj['html_links']
 
         return (objects_created, file_links, html_links)
+
+
+    ### get_base_genome_ref ()
+    #
+    def get_base_genome_ref (self, pangenome_upa, console):
+        base_genome_ref = None
+
+        pg_obj_data = self.dfuClient.get_objects({'object_refs':[pangenome_upa]})['data'][0]
+
+        centroid_score = dict()
+
+        for cluster in pg_obj_data['orthologs']:
+            genome_refs_hit = dict()
+            for homolog in cluster['orthologs']:
+                (gene_id, gene_order, genome_ref) = homolog
+                genome_refs_hit[genome_ref] = True
+            this_cluster_genome_refs = sorted(genome_refs_hit.keys())
+            num_genomes_in_cluster = len(this_cluster_genome_refs)
+            if num_genomes_in_cluster > 1:
+                for genome_ref in this_cluster_genome_refs:
+                    if genome_ref not in centroid_score:
+                        centroid_score[genome_ref] = 0
+                    centroid_score[genome_ref] += num_genomes_in_cluster - 1
+
+        high_score = 0
+        high_score_genome = None
+        for genome_ref in centroid_score.keys():
+            if centroid_score[genome_ref] > high_score:
+                high_score_genome_ref = genome_ref
+                high_score = centroid_score[genome_ref]
+                
+        base_genome_ref = high_score_genome_ref
+        return base_genome_ref
     
-        
+            
     ### prepare_motupan_files ()
     #
     def prepare_motupan_files (self, genome_objs, genome_qual_scores, console):
@@ -513,9 +551,9 @@ class kb_motupan:
                                workspace_name,
                                pangenome_upa,
                                run_dir,
-                               cp_objects_created,
-                               cp_file_links,
-                               cp_html_links,
+                               pcp_objects_created,
+                               pcp_file_links,
+                               pcp_html_links,
                                console):
 
         objects_created = []
@@ -540,9 +578,9 @@ class kb_motupan:
         objects_created.append({'ref': pangenome_upa, 'description': pg_desc})
 
         # add pangenome circle plot output
-        objects_created.extend (cp_objects_created)
+        objects_created.extend (pcp_objects_created)
 
-        for file_link_item in cp_file_links:  # file links can't just be extended
+        for file_link_item in pcp_file_links:  # file links can't just be extended
             #this_shock_id = file_link_item['URL']
             this_shock_id = re.sub('^.*/', '', file_link_item['URL'])
             new_file_link_item = {'shock_id': this_shock_id,
@@ -551,7 +589,7 @@ class kb_motupan:
             }
             file_links.append(new_file_link_item)
             
-        for html_link_item in cp_html_links:  # html links can't just be extended
+        for html_link_item in pcp_html_links:  # html links can't just be extended
             #this_shock_id = html_link_item['URL']
             this_shock_id = re.sub('^.*/', '', html_link_item['URL'])
             new_html_link_item = {'shock_id': this_shock_id,
@@ -819,11 +857,11 @@ class kb_motupan:
            "checkm_version" of String, parameter "mmseqs_cluster_mode" of
            String, parameter "mmseqs_min_seq_id" of Double, parameter
            "mmseqs_min_coverage" of Double, parameter "motupan_max_iter" of
-           Long, parameter "pc_input_genome_ref" of type "data_obj_ref",
-           parameter "pc_input_compare_genome_refs" of type "data_obj_ref",
-           parameter "pc_input_outgroup_genome_refs" of type "data_obj_ref",
-           parameter "pc_save_featuresets" of type "bool", parameter
-           "pc_genome_disp_name_config" of String
+           Long, parameter "pcp_input_genome_ref" of type "data_obj_ref",
+           parameter "pcp_input_compare_genome_refs" of type "data_obj_ref",
+           parameter "pcp_input_outgroup_genome_refs" of type "data_obj_ref",
+           parameter "pcp_save_featuresets" of type "bool", parameter
+           "pcp_genome_disp_name_config" of String
         :returns: instance of type "ReportResults" (Report results **   
            report_name: The name of the report object in the workspace. **   
            report_ref: The UPA of the report object, e.g. wsid/objid/ver.) ->
@@ -887,7 +925,7 @@ class kb_motupan:
 
         
         ### STEP 6: save pangenome object
-        self.log(console, "SAVING PANGENONE OUTPUT OBJECT")
+        self.log(console, "SAVING PANGENOME OUTPUT OBJECT")
         pangenome_upa = self.save_pangenome_obj (ctx,
                                                  params['input_ref'],
                                                  params['workspace_name'],
@@ -902,7 +940,9 @@ class kb_motupan:
         if len (genome_refs) > circle_plot_limit:
             self.log(console, "TOO MANY GENOMES TO PLOT")
         else:
-            (cp_objects_created, cp_file_links, cp_html_links) = self.run_pangenome_circle_plot (pangenome_upa, params)
+            (pcp_objects_created,
+             pcp_file_links,
+             pcp_html_links) = self.run_pangenome_circle_plot (pangenome_upa, params, console)
 
             
         ### STEP 8: make report
@@ -910,9 +950,9 @@ class kb_motupan:
         report_info = self.create_motupan_report (params['workspace_name'],
                                                   pangenome_upa,
                                                   motupan_input_files['run_dir'],
-                                                  cp_objects_created,
-                                                  cp_file_links,
-                                                  cp_html_links,
+                                                  pcp_objects_created,
+                                                  pcp_file_links,
+                                                  pcp_html_links,
                                                   console)
         
         output = {'report_name': report_info['name'],

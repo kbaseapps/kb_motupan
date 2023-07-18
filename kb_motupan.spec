@@ -71,11 +71,11 @@ module kb_motupan {
 	float  mmseqs_min_coverage;
 	int    motupan_max_iter;
 
-        data_obj_ref   pc_input_genome_ref;
-        data_obj_ref   pc_input_compare_genome_refs;
-        data_obj_ref   pc_input_outgroup_genome_refs;
-        bool           pc_save_featuresets;
-        string         pc_genome_disp_name_config;	
+        data_obj_ref   pcp_input_genome_ref;
+        data_obj_ref   pcp_input_compare_genome_refs;
+        data_obj_ref   pcp_input_outgroup_genome_refs;
+        bool           pcp_save_featuresets;
+        string         pcp_genome_disp_name_config;	
     } run_kb_motupan_Params;
     
     funcdef run_kb_motupan (run_kb_motupan_Params params)  returns (ReportResults output) authentication required;

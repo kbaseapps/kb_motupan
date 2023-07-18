@@ -117,7 +117,7 @@
             }
         },
         {
-            "id": "pc_input_genome_ref",
+            "id": "pcp_input_genome_ref",
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
@@ -128,7 +128,7 @@
             }
         },
         {
-            "id": "pc_input_compare_genome_refs",
+            "id": "pcp_input_compare_genome_refs",
             "optional": true,
             "advanced": true,
             "allow_multiple": true,
@@ -139,7 +139,7 @@
             }
         },
         {
-            "id": "pc_input_outgroup_genome_refs",
+            "id": "pcp_input_outgroup_genome_refs",
             "optional": true,
             "advanced": true,
             "allow_multiple": true,
@@ -150,7 +150,7 @@
             }
         },
         {
-            "id": "pc_genome_disp_name_config",
+            "id": "pcp_genome_disp_name_config",
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
@@ -192,7 +192,7 @@
             }
         },
         {
-            "id": "pc_save_featuresets",
+            "id": "pcp_save_featuresets",
             "optional": false,
             "advanced": false,
             "allow_multiple": false,
@@ -249,27 +249,27 @@
                     "target_property": "motupan_max_iter"
                 },
                 {
-                    "input_parameter": "pc_input_genome_ref",
-                    "target_property": "pc_input_genome_ref",
+                    "input_parameter": "pcp_input_genome_ref",
+                    "target_property": "pcp_input_genome_ref",
                     "target_type_transform": "resolved-ref"
                 },
                 {
-                    "input_parameter": "pc_input_compare_genome_refs",
-                    "target_property": "pc_input_compare_genome_refs",
+                    "input_parameter": "pcp_input_compare_genome_refs",
+                    "target_property": "pcp_input_compare_genome_refs",
                     "target_type_transform": "resolved-ref"
                 },
                 {
-                    "input_parameter": "pc_input_outgroup_genome_refs",
-                    "target_property": "pc_input_outgroup_genome_refs",
+                    "input_parameter": "pcp_input_outgroup_genome_refs",
+                    "target_property": "pcp_input_outgroup_genome_refs",
                     "target_type_transform": "resolved-ref"
                 },
                 {
-                    "input_parameter": "pc_genome_disp_name_config",
-                    "target_property": "pc_genome_disp_name_config"
+                    "input_parameter": "pcp_genome_disp_name_config",
+                    "target_property": "pcp_genome_disp_name_config"
                 },
                 {
-                    "input_parameter": "pc_save_featuresets",
-                    "target_property": "pc_save_featuresets"
+                    "input_parameter": "pcp_save_featuresets",
+                    "target_property": "pcp_save_featuresets"
                 }
             ],
             "output_mapping": [
