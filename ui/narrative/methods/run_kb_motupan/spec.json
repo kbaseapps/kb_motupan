@@ -256,12 +256,12 @@
                 {
                     "input_parameter": "pcp_input_compare_genome_refs",
                     "target_property": "pcp_input_compare_genome_refs",
-                    "target_type_transform": "resolved-ref"
+                    "target_type_transform": "list<resolved-ref>"
                 },
                 {
                     "input_parameter": "pcp_input_outgroup_genome_refs",
                     "target_property": "pcp_input_outgroup_genome_refs",
-                    "target_type_transform": "resolved-ref"
+                    "target_type_transform": "list<resolved-ref>"
                 },
                 {
                     "input_parameter": "pcp_genome_disp_name_config",

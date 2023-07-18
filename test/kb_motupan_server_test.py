@@ -279,13 +279,13 @@ class kb_motupanTest(unittest.TestCase):
                    'mmseqs_min_seq_id': 0.0,
                    'mmseqs_min_coverage': 0.8,
                    'motupan_max_iter': 1,
-                   'pc_input_genome_ref': self.genomes[0],
-                   #'pc_input_compare_genome_refs': [],
-                   #'pc_input_compare_genome_refs': None,
-                   'pc_input_compare_genome_refs': [self.genomes[0], self.genomes[1], self.genomes[2], self.genomes[3]],
-                   'pc_input_outgroup_genome_refs': [self.genomes[3]],
-                   'pc_save_featuresets': 1,
-                   'pc_genome_disp_name_config': 'obj_name_ver_sci_name'
+                   'pcp_input_genome_ref': self.genomes[0],
+                   #'pcp_input_compare_genome_refs': [],
+                   #'pcp_input_compare_genome_refs': None,
+                   'pcp_input_compare_genome_refs': [self.genomes[0], self.genomes[1], self.genomes[2], self.genomes[3]],
+                   'pcp_input_outgroup_genome_refs': [self.genomes[3]],
+                   'pcp_save_featuresets': 1,
+                   'pcp_genome_disp_name_config': 'obj_name_ver_sci_name'
         }
         
         ret = self.serviceImpl.run_kb_motupan (self.ctx, params)
@@ -315,10 +315,13 @@ class kb_motupanTest(unittest.TestCase):
                    'mmseqs_min_seq_id': 0.0,
                    'mmseqs_min_coverage': 0.8,
                    'motupan_max_iter': 1,
-                   'pc_input_genome_ref': self.genomes[0],
-                   'pc_input_outgroup_genome_refs': [self.genomes[3]],
-                   'pc_save_featuresets': 1,
-                   'pc_genome_disp_name_config': 'obj_name_ver_sci_name'
+                   'pcp_input_genome_ref': self.genomes[0],
+                   #'pcp_input_compare_genome_refs': [],
+                   #'pcp_input_compare_genome_refs': None,
+                   'pcp_input_compare_genome_refs': [self.genomes[0], self.genomes[1], self.genomes[2], self.genomes[3]],
+                   'pcp_input_outgroup_genome_refs': [self.genomes[3]],
+                   'pcp_save_featuresets': 1,
+                   'pcp_genome_disp_name_config': 'obj_name_ver_sci_name'
         }
         
         ret = self.serviceImpl.run_kb_motupan (self.ctx, params)

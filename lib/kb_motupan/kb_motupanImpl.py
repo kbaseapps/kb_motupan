@@ -41,7 +41,7 @@ class kb_motupan:
     ######################################### noqa
     VERSION = "0.0.2"
     GIT_URL = "https://github.com/kbaseapps/kb_motupan.git"
-    GIT_COMMIT_HASH = "6add5ae5a2c5d1c5fd97654f2047fa7884edd6b6"
+    GIT_COMMIT_HASH = "0ab27d430de5e230f348ee9ce9bd5cc7b582ffca"
 
     #BEGIN_CLASS_HEADER
     workspaceURL = None
@@ -861,10 +861,10 @@ class kb_motupan:
            String, parameter "mmseqs_min_seq_id" of Double, parameter
            "mmseqs_min_coverage" of Double, parameter "motupan_max_iter" of
            Long, parameter "pcp_input_genome_ref" of type "data_obj_ref",
-           parameter "pcp_input_compare_genome_refs" of type "data_obj_ref",
-           parameter "pcp_input_outgroup_genome_refs" of type "data_obj_ref",
-           parameter "pcp_save_featuresets" of type "bool", parameter
-           "pcp_genome_disp_name_config" of String
+           parameter "pcp_input_compare_genome_refs" of list of type
+           "data_obj_ref", parameter "pcp_input_outgroup_genome_refs" of list
+           of type "data_obj_ref", parameter "pcp_save_featuresets" of type
+           "bool", parameter "pcp_genome_disp_name_config" of String
         :returns: instance of type "ReportResults" (Report results **   
            report_name: The name of the report object in the workspace. **   
            report_ref: The UPA of the report object, e.g. wsid/objid/ver.) ->
@@ -886,6 +886,7 @@ class kb_motupan:
         self.log(console, 'Running run_kb_motupan() with params=')
         self.log(console, "\n" + pformat(params))
 
+        
         #### STEP 1: check and default input params
         self.log(console, "VALIDATING AND DEFAULTING INPUT PARAMS")
         params = self.validate_and_default_params (params, console)
