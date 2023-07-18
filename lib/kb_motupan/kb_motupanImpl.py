@@ -337,8 +337,10 @@ class kb_motupan:
             raise ValueError("unable to instantiate phylogenomics_Client. "+str(e))
 
         if not calling_params.get('pcp_input_genome_ref'):
+            self.log(console, "DETERMIONING CENTROID GENOME TO USE AS BASE")
             base_genome_ref = self.get_base_genome_ref (pangenome_upa, console)
         else:
+            self.log(console, "USING REQUESTED GENOME {} AS BASE".format(calling_params['pcp_input_genome_ref'])
             base_genome_ref = calling_params['pcp_input_genome_ref']
             
         circle_plot_params = {

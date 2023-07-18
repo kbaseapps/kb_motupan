@@ -118,7 +118,7 @@
         },
         {
             "id": "pcp_input_genome_ref",
-            "optional": false,
+            "optional": true,
             "advanced": false,
             "allow_multiple": false,
             "default_values": [ "" ],
