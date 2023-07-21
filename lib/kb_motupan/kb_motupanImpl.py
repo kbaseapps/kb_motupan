@@ -933,11 +933,14 @@ class kb_motupan:
 
         #### STEP 3: get completeness scores
         self.log(console, "GETTING COMPLETENESS SCORES")
+        run_as_test_mode = 0
+        if 'run_as_test_mode' in params:
+            run_as_test_mode = int(params['run_as_test_mode'])
         genome_qual_scores = self.get_genome_qual_scores (params['workspace_name'],
                                                           genome_refs,
                                                           genome_objs,
                                                           params['checkm_version'],
-                                                          params['run_as_test_mode'],
+                                                          run_as_test_mode,
                                                           console)
         
 
