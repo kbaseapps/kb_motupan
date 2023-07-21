@@ -41,7 +41,7 @@ class kb_motupan:
     ######################################### noqa
     VERSION = "0.0.2"
     GIT_URL = "https://github.com/kbaseapps/kb_motupan.git"
-    GIT_COMMIT_HASH = "0ab27d430de5e230f348ee9ce9bd5cc7b582ffca"
+    GIT_COMMIT_HASH = "55295bcf9b310c0d56f62b5e36507c907b57aa7d"
 
     #BEGIN_CLASS_HEADER
     workspaceURL = None
@@ -193,7 +193,7 @@ class kb_motupan:
 
     ### get_genome_qual_scores()
     #
-    def get_genome_qual_scores (self, workspace_name, genome_refs, genome_objs, checkm_version, console):
+    def get_genome_qual_scores (self, workspace_name, genome_refs, genome_objs, checkm_version, run_as_test_mode, console):
         genome_qual_scores = dict()
         needing_checkm_run = dict()
         genome_names = []
@@ -233,11 +233,15 @@ class kb_motupan:
         #
         if need_to_run_checkm:
 
-            # DEBUG since can't run CheckM without refdata
-            TEST_MODE = False
-            #TEST_MODE = True
-            if TEST_MODE:
-                for genome_i,genome_name in enumerate(genome_names):
+            # DEBUG since can't run unit tests CheckM without refdata
+            if run_as_test_mode:
+                for genome_i,genome_ref in enumerate(genome_refs):
+                    genome_name = genome_names[genome_i]
+                    if genome_ref not in needing_checkm_run:
+                        self.log(console, "SKIPPING {} ({}) from GenomeSet for CheckM run.  Genome object already has correct quality scores".format(genome_name, genome_ref))
+                        continue
+                
+                    self.log(console, "ADDING {} ({}) to GenomeSet for CheckM run (TEST_MODE NOT RUNNING CHECKM)".format(genome_name, genome_ref))
                     genome_qual_scores[genome_name] = dict()
                     genome_qual_scores[genome_name]['completeness'] = 90.0
                     genome_qual_scores[genome_name]['contamination'] = 2.0
@@ -249,11 +253,12 @@ class kb_motupan:
             checkm_run_genomeset_elements = dict()
             checkm_run_genomeset_ref = None
             for genome_i,genome_ref in enumerate(genome_refs):
+                genome_name = genome_names[genome_i]
                 if genome_ref not in needing_checkm_run:
-                    self.log(console, "SKIPPING {} from GenomeSet for CheckM run.  Genome object already has correct quality scores".format(genome_ref))
+                    self.log(console, "SKIPPING {} ({}) from GenomeSet for CheckM run.  Genome object already has correct quality scores".format(genome_name, genome_ref))
                     continue
                 
-                self.log(console, "ADDING {} to GenomeSet for CheckM run".format(genome_ref))
+                self.log(console, "ADDING {} ({}) to GenomeSet for CheckM run".format(genome_name, genome_ref))
                 checkm_run_genomeset_elements[genome_ref] = { 'ref': genome_ref }
             checkm_run_genomeSet_obj_data = { 'description': 'CheckM run genomes',
                                    'elements': checkm_run_genomeset_elements
@@ -632,13 +637,12 @@ class kb_motupan:
 
         # create report
         report_params = {
+            'direct_html_link_index': 0,
             'html_links': html_links,
             'file_links': file_links,
             'report_object_name': report_name,
             'workspace_name': workspace_name
         }
-        if show_circle_plot:
-            report_params['direct_html_link_index'] = 0
         if objects_created is not None:
             report_params['objects_created'] = objects_created
             
@@ -893,7 +897,8 @@ class kb_motupan:
            parameter "pcp_input_compare_genome_refs" of list of type
            "data_obj_ref", parameter "pcp_input_outgroup_genome_refs" of list
            of type "data_obj_ref", parameter "pcp_save_featuresets" of type
-           "bool", parameter "pcp_genome_disp_name_config" of String
+           "bool", parameter "pcp_genome_disp_name_config" of String,
+           parameter "run_as_test_mode" of type "bool"
         :returns: instance of type "ReportResults" (Report results **   
            report_name: The name of the report object in the workspace. **   
            report_ref: The UPA of the report object, e.g. wsid/objid/ver.) ->
@@ -932,6 +937,7 @@ class kb_motupan:
                                                           genome_refs,
                                                           genome_objs,
                                                           params['checkm_version'],
+                                                          params['run_as_test_mode'],
                                                           console)
         
 

@@ -76,6 +76,8 @@ module kb_motupan {
         list<data_obj_ref>   pcp_input_outgroup_genome_refs;
         bool                 pcp_save_featuresets;
         string               pcp_genome_disp_name_config;	
+
+	bool                 run_as_test_mode;
     } run_kb_motupan_Params;
     
     funcdef run_kb_motupan (run_kb_motupan_Params params)  returns (ReportResults output) authentication required;

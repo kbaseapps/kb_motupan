@@ -211,7 +211,7 @@ class kb_motupanTest(unittest.TestCase):
 
     #### test_run_mmseqs2_and_mptupan_files_01 ():
     #
-    # HIDE @unittest.skip("skipped test_run_mmseqs2_and_mptupan_files_01()")  # uncomment to skip
+    @unittest.skip("skipped test_run_mmseqs2_and_mptupan_files_01()")  # uncomment to skip
     def test_run_mmseqs2_and_mptupan_files_01 (self):
         method = 'test_run_mmseqs2_and_mptupan_files_01'
         msg = "RUNNING: " + method + "()"
@@ -285,7 +285,8 @@ class kb_motupanTest(unittest.TestCase):
                    'pcp_input_compare_genome_refs': [self.genomes[0], self.genomes[1], self.genomes[2], self.genomes[3]],
                    'pcp_input_outgroup_genome_refs': [self.genomes[3]],
                    'pcp_save_featuresets': 1,
-                   'pcp_genome_disp_name_config': 'obj_name_ver_sci_name'
+                   'pcp_genome_disp_name_config': 'obj_name_ver_sci_name',
+                   'run_as_test_mode': 1
         }
         
         ret = self.serviceImpl.run_kb_motupan (self.ctx, params)
@@ -298,7 +299,7 @@ class kb_motupanTest(unittest.TestCase):
 
     #### test_run_kb_motupan_tree_03 ():
     #
-    # HIDE @unittest.skip("skipped test_run_kb_motupan_tree_03()")  # uncomment to skip
+    @unittest.skip("skipped test_run_kb_motupan_tree_03()")  # uncomment to skip
     def test_run_kb_motupan_tree_03 (self):
         method = 'test_run_kb_motupan_tree_03'
         msg = "RUNNING: " + method + "()"
@@ -321,7 +322,9 @@ class kb_motupanTest(unittest.TestCase):
                    'pcp_input_compare_genome_refs': [self.genomes[0], self.genomes[1], self.genomes[2], self.genomes[3]],
                    'pcp_input_outgroup_genome_refs': [self.genomes[3]],
                    'pcp_save_featuresets': 1,
-                   'pcp_genome_disp_name_config': 'obj_name_ver_sci_name'
+                   'pcp_genome_disp_name_config': 'obj_name_ver_sci_name',
+                   'run_as_test_mode': 1
+
         }
         
         ret = self.serviceImpl.run_kb_motupan (self.ctx, params)
