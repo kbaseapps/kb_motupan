@@ -975,8 +975,7 @@ class kb_motupan:
 
         ### STEP 7: run pangenome circle plot
         self.log(console, "GETTING PANGENOME CIRCLE PLOT")
-        #circle_plot_limit = 100
-        circle_plot_limit = 3
+        circle_plot_limit = 100
         show_circle_plot = True
         if len (genome_refs) > circle_plot_limit:
             self.log(console, "TOO MANY GENOMES TO PLOT. Still calculating featuresets if requested")
