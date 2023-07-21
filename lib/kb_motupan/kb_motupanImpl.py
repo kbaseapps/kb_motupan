@@ -250,8 +250,10 @@ class kb_motupan:
             checkm_run_genomeset_ref = None
             for genome_i,genome_ref in enumerate(genome_refs):
                 if genome_ref not in needing_checkm_run:
+                    self.log(console, "SKIPPING {} from GenomeSet for CheckM run.  Genome object already has correct quality scores".format(genome_ref))
                     continue
                 
+                self.log(console, "ADDING {} to GenomeSet for CheckM run".format(genome_ref))
                 checkm_run_genomeset_elements[genome_ref] = { 'ref': genome_ref }
             checkm_run_genomeSet_obj_data = { 'description': 'CheckM run genomes',
                                    'elements': checkm_run_genomeset_elements
@@ -581,6 +583,7 @@ class kb_motupan:
                                pcp_objects_created,
                                pcp_file_links,
                                pcp_html_links,
+                               show_circle_plot,
                                console):
 
         objects_created = []
@@ -615,25 +618,27 @@ class kb_motupan:
                                   'label': file_link_item['label']
             }
             file_links.append(new_file_link_item)
-            
-        for html_link_item in pcp_html_links:  # html links can't just be extended
-            #this_shock_id = html_link_item['URL']
-            this_shock_id = re.sub('^.*/', '', html_link_item['URL'])
-            new_html_link_item = {'shock_id': this_shock_id,
-                                  'name': html_link_item['name'],
-                                  'label': html_link_item['label']
-            }
-            html_links.append(new_html_link_item)            
+
+        if show_circle_plot:
+            for html_link_item in pcp_html_links:  # html links can't just be extended
+                #this_shock_id = html_link_item['URL']
+                this_shock_id = re.sub('^.*/', '', html_link_item['URL'])
+                new_html_link_item = {'shock_id': this_shock_id,
+                                      'name': html_link_item['name'],
+                                      'label': html_link_item['label']
+                }
+                html_links.append(new_html_link_item)            
             
 
         # create report
         report_params = {
-            'direct_html_link_index': 0,
             'html_links': html_links,
             'file_links': file_links,
             'report_object_name': report_name,
             'workspace_name': workspace_name
         }
+        if show_circle_plot:
+            report_params['direct_html_link_index'] = 0
         if objects_created is not None:
             report_params['objects_created'] = objects_created
             
@@ -964,13 +969,15 @@ class kb_motupan:
 
         ### STEP 7: run pangenome circle plot
         self.log(console, "GETTING PANGENOME CIRCLE PLOT")
-        circle_plot_limit = 20
+        #circle_plot_limit = 100
+        circle_plot_limit = 3
+        show_circle_plot = True
         if len (genome_refs) > circle_plot_limit:
-            self.log(console, "TOO MANY GENOMES TO PLOT")
-        else:
-            (pcp_objects_created,
-             pcp_file_links,
-             pcp_html_links) = self.run_pangenome_circle_plot (pangenome_upa, params, console)
+            self.log(console, "TOO MANY GENOMES TO PLOT. Still calculating featuresets if requested")
+            show_circle_plot = False
+        (pcp_objects_created,
+         pcp_file_links,
+         pcp_html_links) = self.run_pangenome_circle_plot (pangenome_upa, params, console)
 
             
         ### STEP 8: make report
@@ -981,6 +988,7 @@ class kb_motupan:
                                                   pcp_objects_created,
                                                   pcp_file_links,
                                                   pcp_html_links,
+                                                  show_circle_plot,
                                                   console)
         
         output = {'report_name': report_info['name'],
