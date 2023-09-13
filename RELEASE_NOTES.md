@@ -4,6 +4,7 @@
 0.0.2
 -----
 * Added run_kb_motupan() method for App
+* Updated Pangenome object typedef
 
 0.0.1
 -----
