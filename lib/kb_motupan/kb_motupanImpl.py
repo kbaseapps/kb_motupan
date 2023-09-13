@@ -252,6 +252,12 @@ class kb_motupan:
             #
             checkm_run_genomeset_elements = dict()
             checkm_run_genomeset_ref = None
+            max_genomes_per_checkm_run = 40
+            subset_checkm_run_genomeset_elements = [{}]
+            subset_checkm_run_genomeset_ref = []
+            subset_checkm_run_genomeset_name = []
+            subset_i = 0
+            subset_cnt = 0
             for genome_i,genome_ref in enumerate(genome_refs):
                 genome_name = genome_names[genome_i]
                 if genome_ref not in needing_checkm_run:
@@ -259,98 +265,108 @@ class kb_motupan:
                     continue
                 
                 self.log(console, "ADDING {} ({}) to GenomeSet for CheckM run".format(genome_name, genome_ref))
-                checkm_run_genomeset_elements[genome_ref] = { 'ref': genome_ref }
-            checkm_run_genomeSet_obj_data = { 'description': 'CheckM run genomes',
-                                   'elements': checkm_run_genomeset_elements
-                                   }
-            checkm_run_genomeSet_name = 'checkm_run_genomes.GenomeSet.'+ str(uuid.uuid4())
+                subset_cnt += 1
+                if subset_cnt > max_genomes_per_checkm_run:
+                    subset_cnt = 0
+                    subset_i += 1
+                    subset_checkm_run_genomeset_elements.append({})
+                
+                checkm_run_genomeset_elements[subset_i][genome_ref] = { 'ref': genome_ref }
+
             ws_id = self.dfuClient.ws_name_to_id (workspace_name)
-            
-            try:
-                checkm_run_genomeSet_info = self.dfuClient.save_objects(
-                    {'id': ws_id,
-                     'objects': [{
-                         'type': 'KBaseSearch.GenomeSet',
-                         'data': checkm_run_genomeSet_obj_data,
-                         'name': checkm_run_genomeSet_name,
-                         'hidden': 1
-                     }]})[0]
-            except Exception as e:
-                raise ValueError ("ABORT: unable to save GenomeSet object.\n"+str(e))
-            checkm_run_genomeset_ref = self.getUPA_fromInfo (checkm_run_genomeSet_info)
+            for subset_i,these_elements in enumerate(checkm_run_genomeset_elements):
+                checkm_run_genomeSet_obj_data = { 'description': 'CheckM run genomes',
+                                                  'elements': these_elements
+                }
+                checkm_run_genomeSet_name = 'checkm_run_genomes.GenomeSet.'+str(subset_i)+'.'+ str(uuid.uuid4())
+                subset_checkm_run_genomeset_name.append(checkm_run_genomeSet_name)
+                
+                try:
+                    checkm_run_genomeSet_info = self.dfuClient.save_objects(
+                        {'id': ws_id,
+                         'objects': [{
+                             'type': 'KBaseSearch.GenomeSet',
+                             'data': checkm_run_genomeSet_obj_data,
+                             'name': checkm_run_genomeSet_name,
+                             'hidden': 1
+                         }]})[0]
+                except Exception as e:
+                    raise ValueError ("ABORT: unable to save GenomeSet object.\n"+str(e))
+                subset_checkm_run_genomeset_ref.append(self.getUPA_fromInfo (checkm_run_genomeSet_info))
 
 
-            # Run CheckM on hidden genomeset
+            # Run CheckM on hidden genomesets
             #
             try:
                 checkM_Client = kb_Msuite(self.callbackURL, token=self.token, service_ver=self.SERVICE_VER)
             except Exception as e:
                 raise ValueError ("unable to instantiate CheckM client")
+
+            for subset_i,checkm_run_genomeset_ref in enumerate(subset_checkm_run_genomeset_ref):
+                checkM_params = {'workspace_name': workspace_name,
+                                 'input_ref': checkm_run_genomeset_ref,
+                                 'reduced_tree': 1,
+                                 'save_output_dir': '0',
+                                 'save_plots_dir': '0',
+                                 'threads': 4
+                }                
                 
-            checkM_params = {'workspace_name': workspace_name,
-                             'input_ref': checkm_run_genomeset_ref,
-                             'reduced_tree': 1,
-                             'save_output_dir': '0',
-                             'save_plots_dir': '0',
-                             'threads': 4
-            }                
-                
-            if checkm_version == 'CheckM-2':
-                raise ValueError ("CheckM2 version not implemented yet")
-            else:
-                sub_method = 'CheckM'
+                if checkm_version == 'CheckM-2':
+                    raise ValueError ("CheckM2 version not implemented yet")
+                else:
+                    sub_method = 'CheckM'
+                    try:
+                        self.log(console, 'RUNNING CheckM for {}'.format(subset_checkm_run_genomeset_name[subset_i]))
+                        this_retVal = checkM_Client.run_checkM_lineage_wf(checkM_params)
+                    except Exception as e:
+                        raise ValueError ("unable to run "+sub_method+". "+str(e))
+                    
                 try:
-                    self.log(console, 'RUNNING CheckM for {}'.format(checkm_run_genomeSet_name))
-                    this_retVal = checkM_Client.run_checkM_lineage_wf(checkM_params)
+                    this_report_obj = self.wsClient.get_objects2({'objects':[{'ref':this_retVal['report_ref']}]})['data'][0]['data']
                 except Exception as e:
-                    raise ValueError ("unable to run "+sub_method+". "+str(e))
-
-            try:
-                this_report_obj = self.wsClient.get_objects2({'objects':[{'ref':this_retVal['report_ref']}]})['data'][0]['data']
-            except Exception as e:
-                raise ValueError("unable to fetch "+sub_method+" report: " + this_retVal['report_ref']+". "+str(e))
+                    raise ValueError("unable to fetch "+sub_method+" report: " + this_retVal['report_ref']+". "+str(e))
             
-            # retrieve CheckM TSV file
-            checkM_outdir = os.path.join(self.scratch, 'checkM.'+str(datetime.now()))
-            if not os.path.exists(checkM_outdir):
-                os.makedirs(checkM_outdir)
-            checkM_tsv_basefile = 'CheckM_summary_table.tsv'
-            checkM_tsv_path = os.path.join(checkM_outdir, checkM_tsv_basefile)
-            found_checkM_summary = False
-            if len(this_report_obj.get('file_links',[])) > 0:
-                for file_link in this_report_obj['file_links']:
-                    if 'name' in file_link and file_link['name'] == checkM_tsv_basefile+'.zip':
-                        self.log(console, "CheckM FILE_LINK contents")
-                        for key in file_link.keys():
-                            self.log(console, "FILE_LINK "+key+": "+str(file_link[key]))
+                # retrieve CheckM TSV file
+                checkM_outdir = os.path.join(self.scratch, 'checkM.'+str(datetime.now()))
+                if not os.path.exists(checkM_outdir):
+                    os.makedirs(checkM_outdir)
+                checkM_tsv_basefile = 'CheckM_summary_table.tsv'
+                checkM_tsv_path = os.path.join(checkM_outdir, checkM_tsv_basefile)
+                found_checkM_summary = False
+                if len(this_report_obj.get('file_links',[])) > 0:
+                    for file_link in this_report_obj['file_links']:
+                        if 'name' in file_link and file_link['name'] == checkM_tsv_basefile+'.zip':
+                            self.log(console, "CheckM FILE_LINK contents")
+                            for key in file_link.keys():
+                                self.log(console, "FILE_LINK "+key+": "+str(file_link[key]))
                                 
-                        download_ret = self.dfuClient.shock_to_file({'handle_id': file_link['handle'],
-                                                                     'file_path': checkM_tsv_path+'.zip',
-                                                                     'unpack': 'unpack'})
-                        # DEBUG
-                        #for key in download_ret.keys():
-                        #    self.log(console, "DOWNLOAD "+str(key)+": "+str(download_ret[key]))
-                        #for inode in os.listdir(checkM_outdir):
-                        #    print ("INODE: "+str(inode))
+                            download_ret = self.dfuClient.shock_to_file({'handle_id': file_link['handle'],
+                                                                         'file_path': checkM_tsv_path+'.zip',
+                                                                         'unpack': 'unpack'})
+                            # DEBUG
+                            #for key in download_ret.keys():
+                            #    self.log(console, "DOWNLOAD "+str(key)+": "+str(download_ret[key]))
+                            #for inode in os.listdir(checkM_outdir):
+                            #    print ("INODE: "+str(inode))
                         
-                        found_checkM_summary = True
-                        break
-            if not found_checkM_summary:
-                raise ValueError ("Failure retrieving CheckM summary TSV file")
-            [GENOME_I, LINEAGE_I, GENOME_CNT_I, MARKER_CNT_I, MARKER_SET_I, CNT_0, CNT_1, CNT_2, CNT_3, CNT_4, CNT_5plus, COMPLETENESS_I, CONTAMINATION_I] = range(13)
-            self.log(console, "CheckM TSV:")
-            with open (checkM_tsv_path, 'r') as checkM_tsv_handle:
-                for checkM_line in checkM_tsv_handle.readlines():
-                    checkM_line = checkM_line.rstrip()
-                    self.log(console, checkM_line)
-                    checkM_info = checkM_line.split("\t")
-                    genome_name = checkM_info[GENOME_I]
-                    if genome_name == 'Bin Name':
-                        continue
-                    genome_qual_scores[genome_name] = dict()
+                            found_checkM_summary = True
+                            break
+                if not found_checkM_summary:
+                    raise ValueError ("Failure retrieving CheckM summary TSV file")
+                [GENOME_I, LINEAGE_I, GENOME_CNT_I, MARKER_CNT_I, MARKER_SET_I, CNT_0, CNT_1, CNT_2, CNT_3, CNT_4, CNT_5plus, COMPLETENESS_I, CONTAMINATION_I] = range(13)
+                self.log(console, "CheckM TSV:")
+                with open (checkM_tsv_path, 'r') as checkM_tsv_handle:
+                    for checkM_line in checkM_tsv_handle.readlines():
+                        checkM_line = checkM_line.rstrip()
+                        self.log(console, checkM_line)
+                        checkM_info = checkM_line.split("\t")
+                        genome_name = checkM_info[GENOME_I]
+                        if genome_name == 'Bin Name':
+                            continue
+                        genome_qual_scores[genome_name] = dict()
 
-                    genome_qual_scores[genome_name]['completeness'] = float(checkM_info[COMPLETENESS_I])  # percent
-                    genome_qual_scores[genome_name]['contamination'] = float(checkM_info[CONTAMINATION_I])  # percent
+                        genome_qual_scores[genome_name]['completeness'] = float(checkM_info[COMPLETENESS_I])  # percent
+                        genome_qual_scores[genome_name]['contamination'] = float(checkM_info[CONTAMINATION_I])  # percent
             
         return genome_qual_scores
 
@@ -978,7 +994,7 @@ class kb_motupan:
 
         ### STEP 7: run pangenome circle plot
         self.log(console, "GETTING PANGENOME CIRCLE PLOT")
-        circle_plot_limit = 100
+        circle_plot_limit = 40
         show_circle_plot = True
         if len (genome_refs) > circle_plot_limit:
             self.log(console, "TOO MANY GENOMES TO PLOT. Still calculating featuresets if requested")
