@@ -41,7 +41,7 @@ class kb_motupan:
     ######################################### noqa
     VERSION = "0.0.2"
     GIT_URL = "https://github.com/kbaseapps/kb_motupan.git"
-    GIT_COMMIT_HASH = "55295bcf9b310c0d56f62b5e36507c907b57aa7d"
+    GIT_COMMIT_HASH = "bdca591d5d16de6249a3ccc40d569a49fcb9e03d"
 
     #BEGIN_CLASS_HEADER
     workspaceURL = None
@@ -105,6 +105,7 @@ class kb_motupan:
     ### run_subprocess ()
     #
     def run_subprocess (self, run_cmd, run_dir, console=None):
+        output_buf = []
         p = subprocess.Popen(run_cmd,
                              cwd=run_dir,
                              stdin=subprocess.DEVNULL,
@@ -117,6 +118,7 @@ class kb_motupan:
             line = p.stdout.readline()
             if not line:
                 break
+            output_buf.append(str(line).replace('\n', ''))
             if console is not None:
                 self.log(console, str(line).replace('\n', ''))
 
@@ -127,7 +129,7 @@ class kb_motupan:
         if p.returncode != 0:
             raise ValueError('Error running CMD: {}, return code: '.format(" ".join(run_cmd)) + str(p.returncode))
 
-        return p.returncode
+        return (p.returncode, output_buf)
     
 
     ### getUPA_fromInfo ()
@@ -492,7 +494,25 @@ class kb_motupan:
                 name2ref_map_path_handle.write("\n".join(name2ref_map_buf)+"\n")
         motupan_input_files['genome_name2ref_path'] = name2ref_map_file
 
-                           
+
+        ### create genome json files
+        #
+        json_genome_obj_dir = os.path.join (this_run_dir, stamp+'-genome_objs')
+        if not os.path.exists (json_genome_obj_dir):
+            os.makedirs (json_genome_obj_dir, mode=0o777, exist_ok=False)
+        json_genome_obj_paths_file = os.path.join (this_run_dir, stamp+'-genome_objs.paths')
+        json_genome_obj_paths_buf = []
+        for genome_obj in genome_objs:
+            genome_name = genome_obj['info'][NAME_I]
+            json_genome_obj_path = os.path.join (json_genome_obj_dir, genome_name+'.json')
+            with open (json_genome_obj_path, 'w') as json_genome_obj_file:
+                json.dump(genome_obj['data'], json_genome_obj_file)
+            json_genome_obj_paths_buf.append ("\t".join([genome_name,json_genome_obj_path]))
+        with open (json_genome_obj_paths_file, 'w') as jgopf:
+            jgopf.write("\n".join(json_genome_obj_paths_buf)+"\n")
+        motupan_input_files['json_genome_obj_paths_file'] = json_genome_obj_paths_file
+
+        
         ### create faa and id_map files
         #
         faa_out_file = os.path.join (this_run_dir, stamp+'.faa')
@@ -728,6 +748,7 @@ class kb_motupan:
            "file_path", parameter "input_gene_id_map_path" of type
            "file_path", parameter "genome_name2ref_path" of type "file_path",
            parameter "run_dir" of type "file_path", parameter
+           "json_genome_obj_paths_file" of type "file_path", parameter
            "output_pangenome_json_path" of type "file_path", parameter
            "mmseqs_cluster_mode" of String, parameter "mmseqs_min_seq_id" of
            Double, parameter "mmseqs_min_coverage" of Double, parameter
@@ -800,8 +821,14 @@ class kb_motupan:
             
             self.log(console, "RUN: "+" ".join(mmseqs_cmd))
             #self.run_subprocess (mmseqs_cmd, params['run_dir'], console)  # too verbose
-            self.run_subprocess (mmseqs_cmd, params['run_dir'])
-
+            (mmseqs_retcode, mmseqs_outbuf) = self.run_subprocess (mmseqs_cmd, params['run_dir'])
+            # get mmseqs_version
+            mmseqs_version = 'FOOBAR'
+            for mmseqs_outline in mmseqs_outbuf:
+                if mmseqs_outline.startswith('MMseqs2 Version: '):
+                    mmseqs_version = mmseqs_outline.replace('MMseqs2 Version: ','').rstrip()
+                    break
+            
             # clean up mmseqs_workdir because symlinks to nothng mess up archive
             (rundir_path, faa_file) = os.path.split (params['input_faa_path'])
             mmseqs_workdir_path = os.path.join (rundir_path, mmseqs_workdir)
@@ -876,11 +903,31 @@ class kb_motupan:
             parse_mOTUpan_cmd += ['--completeness_outfile']
             parse_mOTUpan_cmd += [posterior_qual_path]
             parse_mOTUpan_cmd += ['--force_oldfields']
-            parse_mOTUpan_cmd += ['True']  # change to 'False' when pangenome typedef updated
+            #parse_mOTUpan_cmd += ['True']  # change to 'False' when pangenome typedef updated
+            parse_mOTUpan_cmd += ['False']
             if params.get('genome_name2ref_path'):
                 parse_mOTUpan_cmd += ['--reference_map_infile']
                 parse_mOTUpan_cmd += [params['genome_name2ref_path']]
-                                    
+            if params.get('json_genome_obj_paths_file'):
+                parse_mOTUpan_cmd += ['--json_genome_obj_paths_file']
+                parse_mOTUpan_cmd += [params['json_genome_obj_paths_file']]
+
+            # add command line to store params as metadata
+            cluster_args_str = 'cluster-mode='+str(params['mmseqs_cluster_mode'])
+            cluster_args_str += ';min-seq-id='+str(params['mmseqs_min_seq_id'])
+            cluster_args_str += ';c='+str(params['mmseqs_min_coverage'])
+            cluster_args_str += ';cov-mode='+str(cov_mode)
+            parse_mOTUpan_cmd += ['--cluster_method_params']
+            parse_mOTUpan_cmd += ['"'+cluster_args_str+'"']
+
+            motupan_args_str = 'max_iter='+str(params['motupan_max_iter'])
+            parse_mOTUpan_cmd += ['--pangenome_method_params']
+            parse_mOTUpan_cmd += ['"'+motupan_args_str+'"']
+
+            # add cluster method version
+            parse_mOTUpan_cmd += ['--version_mmseqs2']
+            parse_mOTUpan_cmd += [mmseqs_version]
+            
             self.log(console, "RUN: "+" ".join(parse_mOTUpan_cmd))
             self.run_subprocess (parse_mOTUpan_cmd, params['run_dir'], console)
 
@@ -942,7 +989,7 @@ class kb_motupan:
         params = self.validate_and_default_params (params, console)
 
         
-        #### STEP 2: get genomes
+        #### STEP 2: get genomes and write obj json to file
         self.log(console, "GETTING INPUT GENOME OBJECTS")
         (genome_refs, genome_objs) = self.get_genome_objs (params['input_ref'], console)
         
@@ -973,6 +1020,7 @@ class kb_motupan:
             'genome_name2ref_path': motupan_input_files['genome_name2ref_path'],
             'input_gene_id_map_path': motupan_input_files['input_gene_id_map_path'],
             'run_dir': motupan_input_files['run_dir'],
+            'json_genome_obj_paths_file': motupan_input_files['json_genome_obj_paths_file'],
             'output_pangenome_json_path': motupan_input_files['output_pangenome_json_path'],
             'mmseqs_cluster_mode': params['mmseqs_cluster_mode'],
             'mmseqs_min_seq_id': params['mmseqs_min_seq_id'],

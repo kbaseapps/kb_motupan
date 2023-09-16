@@ -1,6 +1,10 @@
 # kb_motupan release notes
 =========================================
 
+0.0.3
+-----
+* Use new Pangenome object as output
+
 0.0.2
 -----
 * Added run_kb_motupan() method for App

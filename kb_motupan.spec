@@ -39,6 +39,7 @@ module kb_motupan {
 	file_path input_gene_id_map_path;
 	file_path genome_name2ref_path;
 	file_path run_dir;
+	file_path json_genome_obj_paths_file;
 	file_path output_pangenome_json_path;
 	
 	string mmseqs_cluster_mode;
