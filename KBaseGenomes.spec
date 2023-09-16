@@ -962,6 +962,7 @@ module KBaseGenomes {
     Fields:
     id - string - group identifier
     type - string - ... (may duplicate "cat"? leave alone for backwards)
+    gene_name - list<string> - name as described in KBaseGenomes.Genome
     function - string - function as described in KBaseGenomes.Genome
     function_sources - list<tuple<string,string>> - list of tuples of:
         (0) string - gene identifier (ID in gff file)
@@ -990,6 +991,7 @@ module KBaseGenomes {
     typedef structure {
 	string id;
 	string type;
+	list<string> gene_name;
 	string function;
 	list<tuple<string,string>> function_sources;
 	string function_logic;

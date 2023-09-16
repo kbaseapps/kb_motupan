@@ -11,7 +11,8 @@ OrthologFamily object: this object holds all data for a single ortholog family i
 Fields:
     id - string - group identifier
     type - string - ... (may duplicate "cat"? leave alone for backwards)
-    function - string - function as described in KBaseGenomes.Genome
+    gene_name - list<string> - name as described in KBaseGenomes.Genome
+    function - string - functions as described in KBaseGenomes.Genome
     function_sources - list<tuple<string,string>> - list of tuples of:
         (0) string - gene identifier (ID in gff file)
         (1) string - genome workspace reference
@@ -34,11 +35,12 @@ Fields:
     core_log_likelihood - float - mOTUpan-specific score
     mean_copies - float - avg number of copies per genome with cluster
 
-@optional type function function_sources function_logic md5 protein_translation protein_translation_source genome_occ cat core_log_likelihood mean_copies
+@optional type gene_name function function_sources function_logic md5 protein_translation protein_translation_source genome_occ cat core_log_likelihood mean_copies
 */
 typedef structure {
   string id;
   string type;
+  list<string> gene_name;
   string function;
   list<tuple<string,string>> function_sources;
   string function_logic;
