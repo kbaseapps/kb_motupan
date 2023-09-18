@@ -273,7 +273,7 @@ class kb_motupan:
                     subset_i += 1
                     subset_checkm_run_genomeset_elements.append({})
                 
-                checkm_run_genomeset_elements[subset_i][genome_ref] = { 'ref': genome_ref }
+                subset_checkm_run_genomeset_elements[subset_i][genome_ref] = { 'ref': genome_ref }
 
             ws_id = self.dfuClient.ws_name_to_id (workspace_name)
             for subset_i,these_elements in enumerate(checkm_run_genomeset_elements):
