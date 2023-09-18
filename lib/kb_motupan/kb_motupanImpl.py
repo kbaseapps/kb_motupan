@@ -276,7 +276,7 @@ class kb_motupan:
                 subset_checkm_run_genomeset_elements[subset_i][genome_ref] = { 'ref': genome_ref }
 
             ws_id = self.dfuClient.ws_name_to_id (workspace_name)
-            for subset_i,these_elements in enumerate(checkm_run_genomeset_elements):
+            for subset_i,these_elements in enumerate(subset_checkm_run_genomeset_elements):
                 checkm_run_genomeSet_obj_data = { 'description': 'CheckM run genomes',
                                                   'elements': these_elements
                 }
