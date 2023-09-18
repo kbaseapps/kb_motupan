@@ -986,7 +986,7 @@ module KBaseGenomes {
     core_log_likelihood - float - mOTUpan-specific score
     mean_copies - float - avg number of copies per genome with cluster
 
-    @optional type function function_sources function_logic md5 protein_translation protein_translation_source genome_occ cat core_log_likelihood mean_copies
+    @optional type gene_name function function_sources function_logic md5 protein_translation protein_translation_source genome_occ cat core_log_likelihood mean_copies
     */
     typedef structure {
 	string id;
