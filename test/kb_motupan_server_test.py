@@ -262,7 +262,7 @@ class kb_motupanTest(unittest.TestCase):
 
     #### test_run_kb_motupan_genomeset_02 ():
     #
-    @unittest.skip("skipped test_run_kb_motupan_genomeset_02()")  # uncomment to skip
+    # HIDE @unittest.skip("skipped test_run_kb_motupan_genomeset_02()")  # uncomment to skip
     def test_run_kb_motupan_genomeset_02 (self):
         method = 'test_run_kb_motupan_genomeset_02'
         msg = "RUNNING: " + method + "()"
@@ -299,7 +299,7 @@ class kb_motupanTest(unittest.TestCase):
 
     #### test_run_kb_motupan_tree_03 ():
     #
-    @unittest.skip("skipped test_run_kb_motupan_tree_03()")  # uncomment to skip
+    # HIDE @unittest.skip("skipped test_run_kb_motupan_tree_03()")  # uncomment to skip
     def test_run_kb_motupan_tree_03 (self):
         method = 'test_run_kb_motupan_tree_03'
         msg = "RUNNING: " + method + "()"
