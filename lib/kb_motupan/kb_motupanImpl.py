@@ -39,9 +39,9 @@ class kb_motupan:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.0.2"
+    VERSION = "0.0.4"
     GIT_URL = "https://github.com/kbaseapps/kb_motupan.git"
-    GIT_COMMIT_HASH = "bdca591d5d16de6249a3ccc40d569a49fcb9e03d"
+    GIT_COMMIT_HASH = "1e9a0758a3c77bb5d35acb3a82236c0734fb85ad"
 
     #BEGIN_CLASS_HEADER
     workspaceURL = None

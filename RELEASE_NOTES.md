@@ -1,6 +1,10 @@
 # kb_motupan release notes
 =========================================
 
+0.0.4
+-----
+* Use released kb_phylogenomics for view_pan_circle_plot()
+
 0.0.3
 -----
 * Use new Pangenome object as output
