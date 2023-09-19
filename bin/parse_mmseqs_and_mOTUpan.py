@@ -270,6 +270,7 @@ def build_pangenome_obj (mOTUpan_infile,
     pangenome_type = 'mOTUpan'
     pangenome_method_params = dict()
     if pangenome_method_params_str:
+        pangenome_method_params_str = pangenome_method_params_str.strip('"')
         pg_args = pangenome_method_params_str.split(';')
         for arg in pg_args:
             (pg_key,pg_val) = arg.split('=')
@@ -282,10 +283,11 @@ def build_pangenome_obj (mOTUpan_infile,
         clustering_method_ver = version_mmseqs2
     clustering_method_params = dict()
     if cluster_method_params_str:
+        cluster_method_params_str = cluster_method_params_str.strip('"')
         cl_args = cluster_method_params_str.split(';')
         for arg in cl_args:
             (cl_key,cl_val) = arg.split('=')
-            clustering_method_params[pg_key] = pg_val
+            clustering_method_params[cl_key] = cl_val
 
     # assign cluster cats mapping
     cluster_cats = { 'mOTUpan': { 'core': 'core', 'accessory': 'flexible' } }

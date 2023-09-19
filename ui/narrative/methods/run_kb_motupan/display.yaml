@@ -87,11 +87,15 @@ parameters :
 
 description : |
     <h3>Description</h3>
-    <p><b><a href="https://github.com/moritzbuck/mOTUlizer</a></b> is a utility to analyse a group of closely related MAGs/Genomes/bins/SAGs of more or less dubious origin.  The KBase <b>mOTUpan</b> App will run <b>CheckM</b> to score genome completeness if the <b><i>Genome</i></b> object does not already contain quality scores.  Additionally, the <b><i>Pangenome</i></b> object will have "core" or "accessory" classifications based on mOTUpan estimations, which account for completeness in determining core likelihood (please see mOTUpan publication below).</p>
+    <p><b><a href="https://github.com/moritzbuck/mOTUlizer">mOTUpan</a></b> is a utility to analyse a group of closely related MAGs/Genomes/bins/SAGs of more or less dubious origin.  The KBase <b>mOTUpan</b> App will run <b>CheckM</b> to score genome completeness if the <b><i>Genome</i></b> object does not already contain quality scores.  Additionally, the <b><i>Pangenome</i></b> object will have "core" or "accessory" classifications based on mOTUpan estimations, which account for completeness in determining core likelihood (please see mOTUpan publication below).</p>
 
     <p>The report for the mOTUpan App is from the <b>View Pangenome Circle Plot</b> App.  For an explanation of the input parameters, the output figures, subsets of the Pangenome, and the FeatureSet objects it can produce, please see its <a href="https://narrative.kbase.us/#catalog/apps/kb_phylogenomics/view_pan_circle_plot">App Documentation</a>.</p>
 
+    <b>Notes</b><br>
     <p>If you use a <b><i>Species Tree</i></b> as the input for the Pangenome Calculation, you may wish to follow this analysis with the <a href="https://narrative.kbase.us/#catalog/apps/kb_phylogenomics/view_pan_phylo">Phylogenetic Pangenome Accumulation</a> App.
+
+    <p>If all of your input genomes are MAGs, especially if they are not high-quality, you probably should use multiple iterations of mOTUpan to get a better posterior genome completeness estimates. This value is set by the "max-iter" parameter.</p>
+
 
     <p><hr></p>
     <p><strong>Team members who implemented App in KBase:</strong> <a href="https://narrative.kbase.us/#people/dylan">Dylan Chivian</a>. For questions, please <a href=”http://www.kbase.us/support/”>contact us</a>.</p>

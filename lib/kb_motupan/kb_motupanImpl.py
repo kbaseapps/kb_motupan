@@ -825,10 +825,12 @@ class kb_motupan:
             # get mmseqs_version
             mmseqs_version = 'FOOBAR'
             for mmseqs_outline in mmseqs_outbuf:
-                if mmseqs_outline.startswith('MMseqs2 Version: '):
-                    mmseqs_version = mmseqs_outline.replace('MMseqs2 Version: ','').rstrip()
+                #self.log (console, "MMSEQS LINE: ''{}".format(mmseqs_outline))  # DEBUG
+                if mmseqs_outline.startswith('MMseqs Version:'):
+                    mmseqs_version = re.sub('^MMseqs Version:\s*', '', mmseqs_outline).rstrip()
                     break
-            
+            self.log (console, "MMSEQS VER: '{}'".format(mmseqs_version))  # DEBUG
+
             # clean up mmseqs_workdir because symlinks to nothng mess up archive
             (rundir_path, faa_file) = os.path.split (params['input_faa_path'])
             mmseqs_workdir_path = os.path.join (rundir_path, mmseqs_workdir)
