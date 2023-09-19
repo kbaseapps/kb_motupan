@@ -826,8 +826,9 @@ class kb_motupan:
             mmseqs_version = 'FOOBAR'
             for mmseqs_outline in mmseqs_outbuf:
                 #self.log (console, "MMSEQS LINE: ''{}".format(mmseqs_outline))  # DEBUG
-                if mmseqs_outline.startswith('MMseqs Version:'):
-                    mmseqs_version = re.sub('^MMseqs Version:\s*', '', mmseqs_outline).rstrip()
+                if 'MMseqs Version:' in mmseqs_outline:
+                    mmseqs_version = re.sub(r'^.*MMseqs Version:\s*\\t', '', mmseqs_outline).rstrip()
+                    mmseqs_version = re.sub(r'\\n\'$', '', mmseqs_version)
                     break
             self.log (console, "MMSEQS VER: '{}'".format(mmseqs_version))  # DEBUG
 

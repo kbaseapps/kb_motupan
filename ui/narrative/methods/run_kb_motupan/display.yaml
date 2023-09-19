@@ -94,7 +94,13 @@ description : |
     <b>Notes</b><br>
     <p>If you use a <b><i>Species Tree</i></b> as the input for the Pangenome Calculation, you may wish to follow this analysis with the <a href="https://narrative.kbase.us/#catalog/apps/kb_phylogenomics/view_pan_phylo">Phylogenetic Pangenome Accumulation</a> App.
 
-    <p>If all of your input genomes are MAGs, especially if they are not high-quality, you probably should use multiple iterations of mOTUpan to get a better posterior genome completeness estimates. This value is set by the "max-iter" parameter.</p>
+    <p>If all of your input genomes not near-complete isolates, especially if they are not high-quality, you probably should use multiple iterations of mOTUpan to get a better posterior genome completeness estimates. This value is set by the "max-iter" parameter.</p>
+
+
+    <p><hr></p>
+    <p><b>Tool Source:</b></p>
+    <p>mOTUpan v0.3.2 is installed via pip.  Source code is from <a href="https://github.com/moritzbuck/mOTUlizer">https://github.com/moritzbuck/mOTUlizer</a></p>
+    <p>MicroTrait v1.0 HMMs are installed from <a href="https://github.com/ukaraoz/microtrait-hmm/tree/master/data.kb_hmmer/hmm">https://github.com/ukaraoz/microtrait-hmm/tree/master/data.kb_hmmer/hmm</a></p>
 
 
     <p><hr></p>
