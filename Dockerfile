@@ -27,7 +27,7 @@ RUN make all
 
 # MMseqs2
 ENV MMSEQS_VERSION='14-7e284'
-RUN curl -L -O https://github.com/soedinglab/MMseqs2/releases/download/${MMSEQS_VERSION}/mmseqs-linux-avx2.tar.gz
+RUN curl -L -O https://github.com/soedinglab/MMseqs2/releases/download/${MMSEQS_VERSION}/mmseqs-linux-avx2.tar.gz && \
     tar xvzf mmseqs-linux-avx2.tar.gz
 ENV PATH="${PATH}:/kb/module/mmseqs/bin"
 
