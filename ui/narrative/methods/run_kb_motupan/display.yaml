@@ -87,7 +87,7 @@ parameters :
 
 description : |
     <h3>Description</h3>
-    <p><b><a href="https://github.com/moritzbuck/mOTUlizer">mOTUpan</a></b> is a utility to analyse a group of closely related MAGs/Genomes/bins/SAGs of more or less dubious origin.  The KBase <b>mOTUpan</b> App will run <b>CheckM</b> to score genome completeness if the <b><i>Genome</i></b> object does not already contain quality scores.  Additionally, the <b><i>Pangenome</i></b> object will have "core" or "accessory" classifications based on mOTUpan estimations, which account for completeness in determining core likelihood (please see mOTUpan publication below).</p>
+    <p><b><a href="https://github.com/moritzbuck/mOTUlizer">mOTUpan</a></b> is a Pangenome calculation tool used to analyze a group of related MAGs/Genomes/bins/SAGs that may include less than complete genomes.  The core calculation and posterior completeness are re-estimated after each iterative round of running mOTUpan.  The KBase <b>mOTUpan</b> App will run <b>CheckM</b> to score the initial genome completeness if the <b><i>Genome</i></b> object does not already contain quality scores.  Additionally, the <b><i>Pangenome</i></b> object will have "core" or "accessory" classifications based on mOTUpan estimations, which account for completeness in determining core likelihood (please see mOTUpan publication below).</p>
 
     <p>The report for the mOTUpan App is from the <b>View Pangenome Circle Plot</b> App.  For an explanation of the input parameters, the output figures, subsets of the Pangenome, and the FeatureSet objects it can produce, please see its <a href="https://narrative.kbase.us/#catalog/apps/kb_phylogenomics/view_pan_circle_plot">App Documentation</a>.</p>
 
