@@ -100,7 +100,7 @@ description : |
     <p><hr></p>
     <p><b>Tool Source:</b></p>
     <p>mOTUpan v0.3.2 is installed via pip.  Source code is from <a href="https://github.com/moritzbuck/mOTUlizer">https://github.com/moritzbuck/mOTUlizer</a></p>
-    <p>MMseqs2 is installed from <a href="https://mmseqs.com/latest/">https://mmseqs.com/latest/</a></p>
+    <p>MMseqs2 release 14-7e284 is installed from <a href="https://github.com/soedinglab/MMseqs2/releases/tag/14-7e284">https://github.com/soedinglab/MMseqs2/releases/tag/14-7e284</a></p>
 
 
     <p><hr></p>
