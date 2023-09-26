@@ -3,6 +3,7 @@ import os
 import time
 import unittest
 import shutil
+import json
 from shutil import copyfile
 from pathlib import Path
 from pprint import pprint
@@ -306,7 +307,9 @@ class kb_motupanTest(unittest.TestCase):
         print("\n\n" + msg)
         print("=" * len(msg) + "\n\n")
 
+        pg_ws_name = 'dylan:narrative_1689301418337'
 
+        
         input_ref = self.tree
         params = { 'workspace_name': self.wsName,
                    'input_ref': input_ref,
@@ -332,5 +335,73 @@ class kb_motupanTest(unittest.TestCase):
         print('RESULT:')
         pprint(ret)
 
+        pass
+
+    
+    #### test_upload_pangenomes ():
+    #
+    # SKIP THIS!!!  JUST USED FOR UPLOADING PG OBJECTS
+    @unittest.skip("skipped test_upload_pangenomes()")  # uncomment to skip
+    def test_upload_pangenomes (self):
+        method = 'test_upload_pangenomes'
+        msg = "RUNNING: " + method + "()"
+        print("\n\n" + msg)
+        print("=" * len(msg) + "\n\n")
+
+        [OBJID_I, NAME_I, TYPE_I, SAVE_DATE_I, VERSION_I, SAVED_BY_I, WSID_I, WORKSPACE_I, CHSUM_I, SIZE_I, META_I] = range(11)  # object_info tuple
+
+        # workspace
+        pg_workspace_name = 'dylan:narrative_1689301418337'
+
+        # config
+        obj_prefix = 'GTDB_Bac'
+        domain = 'bacteria'
+        genome_size = '100-948'
+        chunk = '0001-0001'
+
+        target_file = domain+'-species_by_genus-'+genome_size+'.cnt.'+chunk
+        target_path = os.path.join(os.sep, 'pangenome', 'lists', target_file)
+        work_path = os.path.join(os.sep, 'pangenome', 'docker_work-'+domain, 'genus', 'chunk_'+genome_size, 'genus-spreps')
+
+        genus_names = []
+        species_counts = []
+        with open (target_path, 'r') as targ_h:
+            for targ_line in targ_h:
+                [genome_cnt, lineage_str] = targ_line.rstrip().split()
+                genus = lineage_str.split(';')[-1]
+                genus_names.append (genus)
+                species_counts.append (genome_cnt)
+
+        # make sure we have all of them first
+        for genus_i,genus in enumerate(genus_names):
+            #pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot-nofxnsources.json')
+            pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-nofxnsources.json')
+            #pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot.json')
+            if not os.path.exists(pg_json_path):
+                raise ValueError ("no such file {}".format(pg_json_path))
+
+        # now upload them
+        print ("UPLOADING PANGENOMES")
+        for genus_i,genus in enumerate(genus_names):
+            print ("================================\n{} UPLOADING {} {}\n================================".format ((genus_i+1), species_counts[genus_i], genus), flush=True)
+
+            pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot.json')
+            with open (pg_json_path, 'r') as pg_json_h:
+                pg_data = json.load(pg_json_h)
+
+            obj_name = obj_prefix+'-'+genus+'-'+'r214'+'-'+str(species_counts[genus_i])+'genomes.Pangenome'
+            print ("UPLOADING PG TO OBJ {}".format(obj_name), flush=True)
+                
+            try:
+                pg_info = self.wsClient.save_objects(
+                    {'workspace': pg_workspace_name,
+                     'objects': [{
+                         'type': 'KBaseGenomes.Pangenome',
+                         'data': pg_data,
+                         'name': obj_name
+                     }]})[0]
+            except Exception as e:
+                raise ValueError ("ABORT: unable to save Pangenome object.\n"+str(e))
+            
         pass
     

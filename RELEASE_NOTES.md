@@ -4,6 +4,7 @@
 0.0.4
 -----
 * Use released kb_phylogenomics for view_pan_circle_plot()
+* Added scripts for creating genus mOTUpan pangenome files and objs
 
 0.0.3
 -----
