@@ -374,9 +374,7 @@ class kb_motupanTest(unittest.TestCase):
 
         # make sure we have all of them first
         for genus_i,genus in enumerate(genus_names):
-            #pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot-nofxnsources.json')
-            pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-nofxnsources.json')
-            #pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot.json')
+            pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot.json')
             if not os.path.exists(pg_json_path):
                 raise ValueError ("no such file {}".format(pg_json_path))
 
@@ -385,11 +383,16 @@ class kb_motupanTest(unittest.TestCase):
         for genus_i,genus in enumerate(genus_names):
             print ("================================\n{} UPLOADING {} {}\n================================".format ((genus_i+1), species_counts[genus_i], genus), flush=True)
 
-            pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot.json')
+            #chunk = 'core'
+            #chunk = 'acc-part1'
+            #chunk = 'acc-part2'
+            chunk = 'acc-part3'
+            pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot-'+chunk+'.json')
+            #pg_json_path = os.path.join (work_path, genus, genus+'-mOTUpan-pangenome-fxn-prot.json')
             with open (pg_json_path, 'r') as pg_json_h:
                 pg_data = json.load(pg_json_h)
 
-            obj_name = obj_prefix+'-'+genus+'-'+'r214'+'-'+str(species_counts[genus_i])+'genomes.Pangenome'
+            obj_name = obj_prefix+'-'+genus+'-'+'r214'+'-'+str(species_counts[genus_i])+'genomes'+'-subset_'+chunk+'.Pangenome'
             print ("UPLOADING PG TO OBJ {}".format(obj_name), flush=True)
                 
             try:
